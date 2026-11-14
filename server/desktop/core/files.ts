@@ -242,17 +242,34 @@ export class FileEngine {
 
     try {
       if (ext === ".pdf") {
-        // Dynamic import / require of pdf-parse
-        const pdfParseMod = await import("pdf-parse");
-        const pdfParse = (pdfParseMod as any).default || pdfParseMod;
         const dataBuffer = await fs.promises.readFile(p);
-        const data = await pdfParse(dataBuffer);
-        const text = data.text ? data.text.trim() : "";
+        let extractedText = "";
+        let pageCount = 1;
+
+        // Modern pdf-parse v2+ exports { PDFParse } class, while v1 exported a function
+        try {
+          const pdfMod: any = await import("pdf-parse");
+          if (typeof pdfMod.PDFParse === "function") {
+            const parser = new pdfMod.PDFParse({ data: dataBuffer });
+            const res = await parser.getText();
+            extractedText = res.text || "";
+            pageCount = res.total || 1;
+          } else if (typeof pdfMod.default === "function" || typeof pdfMod === "function") {
+            const fn = typeof pdfMod.default === "function" ? pdfMod.default : pdfMod;
+            const res = await fn(dataBuffer);
+            extractedText = res.text || "";
+            pageCount = res.numpages || 1;
+          }
+        } catch (pdfErr: any) {
+          // Fall through to scanned OCR if parsing library fails on non-standard PDFs
+        }
+
+        const text = extractedText.trim();
         const truncated = text.length > maxCharacters;
         return {
-          ok: true,
+          ok: text.length > 0,
           format: "pdf",
-          pages: data.numpages,
+          pages: pageCount,
           text: truncated ? text.slice(0, maxCharacters) + "\n...[truncated]" : text
         };
       }
