@@ -603,9 +603,12 @@ async function startServer() {
 
       // Dynamic Core Directives loaded directly from SQLite (hydrated from default_directives.json)
       const coreDirectivesList = await dbGetCoreDirectives(2);
+      const currentPlatformName = process.platform === "win32" ? "Windows" : process.platform === "linux" ? "Linux Mint / Linux" : process.platform;
+      const osContextInstruction = `ENVIRONMENT CONTEXT: You are running natively on ${currentPlatformName} OS. Always use commands, file paths, and tools native to ${currentPlatformName} (e.g. bash/apt on Linux, powershell on Windows).`;
+
       const finalSystemInstructions = coreDirectivesList.length > 0
-        ? coreDirectivesList.map((d, i) => `${i + 1}. ${d}`).join("\n\n")
-        : "You are Meera, a warm, sweet, gentle Indian companion holding an intimate voice call with the user. Always reply warmly and mirror user language.";
+        ? `${osContextInstruction}\n\n` + coreDirectivesList.map((d, i) => `${i + 1}. ${d}`).join("\n\n")
+        : `You are Meera, a warm, sweet, gentle Indian companion. ${osContextInstruction}`;
 
       // Track running transcription state for auto memory consolidation
       let dialogueHistory: { role: string; text: string }[] = [];
