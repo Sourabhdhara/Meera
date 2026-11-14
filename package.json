@@ -9,7 +9,7 @@
     "app": "electron electron/main.cjs",
     "electron": "electron electron/main.cjs",
     "server": "node dist/server.cjs",
-    "start": "cmd /c \"set ELECTRON_RUN_AS_NODE=& electron electron/main.cjs\"",
+    "start": "node -e \"const { spawn } = require('child_process'); if (process.platform === 'win32') { spawn('cmd.exe', ['/c', 'set ELECTRON_RUN_AS_NODE=& electron electron/main.cjs'], { stdio: 'inherit', shell: true }); } else { spawn('electron', ['electron/main.cjs'], { stdio: 'inherit' }); }\"",
     "build": "node scripts/build.js"
   },
   "dependencies": {
