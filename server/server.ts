@@ -735,7 +735,7 @@ async function startServer() {
               }
             },
             speechConfig: {
-              voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } },
+              voiceConfig: { prebuiltVoiceConfig: { voiceName: "Aoede" } },
             },
             inputAudioTranscription: {},
             outputAudioTranscription: {},
