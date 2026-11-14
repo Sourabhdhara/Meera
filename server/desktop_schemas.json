@@ -296,6 +296,26 @@
     }
   },
   {
+    "name": "read_document",
+    "description": "Extracts and reads full text content from documents, PDFs (.pdf via pdf-parse), Word documents (.docx via mammoth), or image files (.png/.jpg via OCR) in the background without needing to open them.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "path": {
+          "type": "STRING",
+          "description": "Path to the document or image file (supports .pdf, .docx, .txt, .md, .csv, .json, .png, .jpg)."
+        },
+        "max_characters": {
+          "type": "INTEGER",
+          "description": "Maximum characters to extract (default 25000)."
+        }
+      },
+      "required": [
+        "path"
+      ]
+    }
+  },
+  {
     "name": "copy_to_clipboard",
     "description": "Copies text or content to the Windows system clipboard.",
     "parameters": {

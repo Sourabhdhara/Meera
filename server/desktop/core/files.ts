@@ -231,5 +231,63 @@ export class FileEngine {
     spawn("notepad.exe", [tmp], { detached: true, stdio: "ignore" }).unref();
     return { ok: true, path: tmp, result: `Wrote content to temporary file ${path.basename(tmp)} and opened in Notepad.` };
   }
+
+  public async readDocumentText(targetPath: string, maxCharacters: number = 25000): Promise<{ ok: boolean; text?: string; format?: string; pages?: number; error?: string }> {
+    const p = this.resolvePath(targetPath);
+    if (!fs.existsSync(p)) {
+      return { ok: false, error: `Document file not found: '${p}'` };
+    }
+
+    const ext = path.extname(p).toLowerCase();
+
+    try {
+      if (ext === ".pdf") {
+        // Dynamic import / require of pdf-parse
+        const pdfParseMod = await import("pdf-parse");
+        const pdfParse = (pdfParseMod as any).default || pdfParseMod;
+        const dataBuffer = await fs.promises.readFile(p);
+        const data = await pdfParse(dataBuffer);
+        const text = data.text ? data.text.trim() : "";
+        const truncated = text.length > maxCharacters;
+        return {
+          ok: true,
+          format: "pdf",
+          pages: data.numpages,
+          text: truncated ? text.slice(0, maxCharacters) + "\n...[truncated]" : text
+        };
+      }
+
+      if (ext === ".docx") {
+        // Dynamic import / require of mammoth
+        const mammothMod = await import("mammoth");
+        const mammoth = (mammothMod as any).default || mammothMod;
+        const result = await mammoth.extractRawText({ path: p });
+        const text = result.value ? result.value.trim() : "";
+        const truncated = text.length > maxCharacters;
+        return {
+          ok: true,
+          format: "docx",
+          text: truncated ? text.slice(0, maxCharacters) + "\n...[truncated]" : text
+        };
+      }
+
+      if (ext === ".txt" || ext === ".md" || ext === ".json" || ext === ".csv" || ext === ".log" || ext === ".html") {
+        const data = await fs.promises.readFile(p, "utf-8");
+        const truncated = data.length > maxCharacters;
+        return {
+          ok: true,
+          format: ext.slice(1),
+          text: truncated ? data.slice(0, maxCharacters) + "\n...[truncated]" : data
+        };
+      }
+
+      return {
+        ok: false,
+        error: `Unsupported document format '${ext}'. Supported formats: .pdf, .docx, .txt, .md, .csv, .json, .png, .jpg (for images use find_text_in_image or read_document).`
+      };
+    } catch (err: any) {
+      return { ok: false, error: `Failed parsing document '${path.basename(p)}': ${err.message}` };
+    }
+  }
 }
 

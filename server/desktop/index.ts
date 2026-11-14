@@ -42,7 +42,8 @@ import {
   ListFolderTool,
   SearchFilesTool,
   RecycleFileTool,
-  WriteToNotepadTool
+  WriteToNotepadTool,
+  ReadDocumentTool
 } from "./tools/tools_files";
 
 import {
@@ -134,6 +135,7 @@ const toolsList: BaseTool[] = [
   new SearchFilesTool(),
   new RecycleFileTool(),
   new WriteToNotepadTool(),
+  new ReadDocumentTool(),
 
   new ListWindowsTool(),
   new FocusWindowTool(),

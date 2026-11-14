@@ -596,4 +596,17 @@ export class ScreenEngine {
       word: match.word
     };
   }
+
+  public async extractAllTextFromImage(imagePath: string): Promise<{ ok: boolean; text?: string; count?: number; error?: string }> {
+    try {
+      const scan = await this.getScreenElements(imagePath);
+      if (!scan.ok) {
+        return { ok: false, error: scan.result || "Failed to scan image." };
+      }
+      const lines = scan.elements.map(e => e.name).filter(Boolean);
+      return { ok: true, text: lines.join("\n"), count: lines.length };
+    } catch (err: any) {
+      return { ok: false, error: err.message };
+    }
+  }
 }

@@ -97,3 +97,25 @@ export class WriteToNotepadTool extends BaseTool {
   }
 }
 
+export class ReadDocumentTool extends BaseTool {
+  name = "read_document";
+  description = "Extracts and reads full text content from documents, PDFs (.pdf via pdf-parse), Word documents (.docx via mammoth), or image files (.png/.jpg via OCR) in the background.";
+
+  async run(args: { path: string; max_characters?: number }) {
+    if (!args?.path) this.fail("File path is required.");
+    const ext = (args.path.split(".").pop() || "").toLowerCase();
+
+    // If it's an image, route through OCR
+    if (["png", "jpg", "jpeg", "bmp"].includes(ext)) {
+      const ocrRes = await this.screen.extractAllTextFromImage(args.path);
+      if (!ocrRes.ok) this.fail(ocrRes.error || "OCR failed on image.");
+      return { result: ocrRes.text, format: ext, total_lines: ocrRes.count, source: "Windows.Media.Ocr" };
+    }
+
+    // Otherwise route through pure Node.js parser (pdf-parse / mammoth)
+    const docRes = await this.files.readDocumentText(args.path, args.max_characters || 25000);
+    if (!docRes.ok) this.fail(docRes.error || "Document reading failed.");
+    return { result: docRes.text, format: docRes.format, pages: docRes.pages };
+  }
+}
+
