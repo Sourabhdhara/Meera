@@ -1,0 +1,930 @@
+[{
+    "name": "get_current_time",
+    "description": "Returns the authoritative current local date and time from this computer. Use this whenever the user asks for the current time or date; do not guess. Default timezone is Asia/Kolkata (IST).",
+    "parameters": { "type": "OBJECT", "properties": { "timezone": { "type": "STRING" } } }
+  },
+  {
+    "name": "show_desktop_notification",
+    "description": "Shows a custom purple desktop popup notification card in the bottom-right corner of the screen with a title, message, and alert chime, also sending a Windows Action Center toast.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "message": {
+          "type": "STRING"
+        },
+        "title": {
+          "type": "STRING"
+        }
+      },
+      "required": [
+        "message"
+      ]
+    }
+  },
+  {
+    "name": "get_network_status",
+    "description": "Checks network connectivity, connected Wi-Fi network SSID, signal strength percentage, link speed, local IP address, and ping latency to the internet.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {}
+    }
+  },
+  {
+    "name": "set_reminder_timer",
+    "description": "Schedules a proactive timer or reminder that will alert the user after a given number of minutes with an on-screen purple notification popup card and an alert chime.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "minutes": {
+          "type": "NUMBER"
+        },
+        "message": {
+          "type": "STRING"
+        },
+        "title": {
+          "type": "STRING"
+        }
+      },
+      "required": [
+        "minutes",
+        "message"
+      ]
+    }
+  },
+  {
+    "name": "list_active_reminders",
+    "description": "Lists all currently pending reminders and timers with their remaining time and reminder IDs.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {}
+    }
+  },
+  {
+    "name": "cancel_reminder_timer",
+    "description": "Cancels an active reminder or timer by its reminder ID or partial reminder text.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "reminder_query": {
+          "type": "STRING"
+        }
+      },
+      "required": [
+        "reminder_query"
+      ]
+    }
+  },
+  {
+    "name": "set_display_brightness",
+    "description": "Sets the display screen brightness percentage between 10 and 100 percent. Works universally across external desktop monitors, laptops, and HDMI/DisplayPort screens.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "level": {
+          "type": "INTEGER"
+        },
+        "percent": {
+          "type": "INTEGER"
+        }
+      }
+    }
+  },
+  {
+    "name": "get_display_brightness",
+    "description": "Checks and returns the current estimated screen display brightness percentage.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {}
+    }
+  },
+  {
+    "name": "read_file",
+    "description": "Reads text contents from a local file safely. Supports path shortcuts like '~/Desktop' or '~/Downloads'.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "path": {
+          "type": "STRING"
+        },
+        "max_characters": {
+          "type": "INTEGER"
+        }
+      },
+      "required": [
+        "path"
+      ]
+    }
+  },
+  {
+    "name": "write_file",
+    "description": "Writes text content to a local file, creating parent directories automatically.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "path": {
+          "type": "STRING"
+        },
+        "content": {
+          "type": "STRING"
+        }
+      },
+      "required": [
+        "path",
+        "content"
+      ]
+    }
+  },
+  {
+    "name": "append_to_file",
+    "description": "Appends a note or text to a file with an automatic timestamp (great for logs or notes).",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "path": {
+          "type": "STRING"
+        },
+        "content": {
+          "type": "STRING"
+        }
+      },
+      "required": [
+        "path",
+        "content"
+      ]
+    }
+  },
+  {
+    "name": "list_folder",
+    "description": "Lists files and subdirectories in a directory with file sizes and modified dates.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "folder_path": {
+          "type": "STRING"
+        }
+      }
+    }
+  },
+  {
+    "name": "search_files",
+    "description": "Searches for files matching a filename or extension pattern recursively.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "filename_query": {
+          "type": "STRING"
+        },
+        "search_directory": {
+          "type": "STRING"
+        }
+      },
+      "required": [
+        "filename_query"
+      ]
+    }
+  },
+  {
+    "name": "recycle_file",
+    "description": "Safely moves a file or folder to the Windows Recycle Bin (never permanently deletes).",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "path": {
+          "type": "STRING"
+        }
+      },
+      "required": [
+        "path"
+      ]
+    }
+  },
+  {
+    "name": "write_to_notepad",
+    "description": "Writes or replaces text in Notepad and opens it immediately on screen (ideal for writing out conversation transcripts, notes, code, or logs).",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "content": {
+          "type": "STRING"
+        },
+        "title": {
+          "type": "STRING"
+        }
+      },
+      "required": [
+        "content"
+      ]
+    }
+  },
+  {
+    "name": "copy_to_clipboard",
+    "description": "Copies text or content to the Windows system clipboard.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "text": {
+          "type": "STRING"
+        }
+      },
+      "required": [
+        "text"
+      ]
+    }
+  },
+  {
+    "name": "get_clipboard",
+    "description": "Reads current text content from the Windows clipboard.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {}
+    }
+  },
+  {
+    "name": "press_keyboard_hotkey",
+    "description": "Sends a keyboard shortcut combination to the active window (e.g. 'ctrl+c', 'ctrl+v', 'alt+tab', 'win+d', 'ctrl+s').",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "keys": {
+          "type": "STRING"
+        }
+      },
+      "required": [
+        "keys"
+      ]
+    }
+  },
+  {
+    "name": "type_text",
+    "description": "Types text into the currently focused window or text box.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "text": {
+          "type": "STRING"
+        }
+      },
+      "required": [
+        "text"
+      ]
+    }
+  },
+  {
+    "name": "paste_text",
+    "description": "Pastes text or a file path directly into the active window or an optionally focused target window via clipboard Ctrl+V.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "text": {
+          "type": "STRING",
+          "description": "The exact text or file path to paste."
+        },
+        "window_title": {
+          "type": "STRING",
+          "description": "Optional title or name of the window to bring to the foreground and focus before pasting (e.g. 'Notepad', 'Chrome', 'Terminal', 'Explorer')."
+        }
+      },
+      "required": [
+        "text"
+      ]
+    }
+  },
+  {
+    "name": "move_mouse",
+    "description": "Moves the mouse cursor to specific (x, y) coordinates on the screen with smooth gliding motion.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "x": {
+          "type": "INTEGER"
+        },
+        "y": {
+          "type": "INTEGER"
+        },
+        "smooth": {
+          "type": "BOOLEAN"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ]
+    }
+  },
+  {
+    "name": "click_mouse",
+    "description": "Clicks the mouse button at specified (x, y) coordinates or at the current mouse position (supports single, double, and right click).",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "x": {
+          "type": "STRING"
+        },
+        "y": {
+          "type": "STRING"
+        },
+        "button": {
+          "type": "STRING"
+        },
+        "clicks": {
+          "type": "INTEGER"
+        }
+      }
+    }
+  },
+  {
+    "name": "scroll_mouse",
+    "description": "Scrolls the mouse wheel up or down on the currently hovered window or page.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "clicks": {
+          "type": "INTEGER"
+        }
+      }
+    }
+  },
+  {
+    "name": "get_mouse_position",
+    "description": "Returns the current mouse cursor (x, y) coordinates and current screen resolution width and height.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {}
+    }
+  },
+  {
+    "name": "execute_powershell_script",
+    "description": "Executes a PowerShell command or script to inspect, configure, or repair the system. You autonomously decide the expected timeout_seconds based on the nature of the task (e.g. 5-15s for quick queries, 60-120s for disk searches/downloads, 300-600s for deep system scans like sfc or chkdsk).",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "command": {
+          "type": "STRING",
+          "description": "Short description of what is being executed."
+        },
+        "script": {
+          "type": "STRING",
+          "description": "PowerShell script code."
+        },
+        "code": {
+          "type": "STRING",
+          "description": "The exact executable PowerShell script."
+        },
+        "timeout_seconds": {
+          "type": "INTEGER",
+          "description": "The maximum duration in seconds to wait for output before cancelling. Estimate this dynamically based on the command."
+        }
+      }
+    }
+  },
+  {
+    "name": "execute_powershell_script_visible",
+    "description": "Opens a visible PowerShell console in the foreground and runs the requested PowerShell command or script in it. Use only when the user explicitly asks to open/show PowerShell or run it visibly in front of them.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "command": { "type": "STRING", "description": "PowerShell script code." },
+        "script": { "type": "STRING", "description": "PowerShell script code." },
+        "code": { "type": "STRING", "description": "The exact PowerShell script to run visibly." }
+      }
+    }
+  },
+  {
+    "name": "execute_command",
+    "description": "Executes a Windows shell / CMD command or batch script (e.g. 'dir', 'ipconfig', 'netstat', 'ping', 'where'). Captures stdout and stderr.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "command": {
+          "type": "STRING"
+        },
+        "cmd": {
+          "type": "STRING"
+        },
+        "code": {
+          "type": "STRING"
+        },
+        "timeout_seconds": {
+          "type": "INTEGER"
+        }
+      }
+    }
+  },
+  {
+    "name": "save_automation_script",
+    "description": "Saves a reusable automation script (PowerShell or Batch) to MEERA's persistent library so it can be re-run at any time by name.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "script_name": {
+          "type": "STRING"
+        },
+        "name": {
+          "type": "STRING"
+        },
+        "code": {
+          "type": "STRING"
+        },
+        "script": {
+          "type": "STRING"
+        },
+        "language": {
+          "type": "STRING"
+        },
+        "description": {
+          "type": "STRING"
+        }
+      }
+    }
+  },
+  {
+    "name": "run_automation_script",
+    "description": "Executes a previously saved automation script by its name.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "script_name": {
+          "type": "STRING"
+        },
+        "name": {
+          "type": "STRING"
+        },
+        "timeout_seconds": {
+          "type": "INTEGER"
+        }
+      }
+    }
+  },
+  {
+    "name": "list_automation_scripts",
+    "description": "Lists all saved persistent automation scripts in MEERA's library.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {}
+    }
+  },
+  {
+    "name": "delete_automation_script",
+    "description": "Deletes a saved automation script from MEERA's library.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "script_name": {
+          "type": "STRING"
+        },
+        "name": {
+          "type": "STRING"
+        }
+      }
+    }
+  },
+  {
+    "name": "take_screenshot",
+    "description": "Captures a full screenshot of the user's screen and saves it as a PNG file. By default saves directly to the user's Desktop for easy access.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "filename": {
+          "type": "STRING"
+        },
+        "save_to_desktop": {
+          "type": "BOOLEAN"
+        }
+      }
+    }
+  },
+  {
+    "name": "get_screen_info",
+    "description": "Returns the physical screen resolution dimensions (width and height in pixels).",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {}
+    }
+  },
+  {
+    "name": "launch_application",
+    "description": "Launches an application by name, executable, or protocol (e.g. 'notepad', 'calc', 'chrome', 'spotify', 'zcode', 'vscode', 'settings', 'terminal').",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "app_name": {
+          "type": "STRING"
+        }
+      },
+      "required": [
+        "app_name"
+      ]
+    }
+  },
+  {
+    "name": "close_application",
+    "description": "Closes or terminates a running application, program, File Explorer, or desktop window by name (e.g. 'file explorer', 'explorer', 'control panel', 'chrome', 'notepad', 'edge', 'settings', 'zcode').",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "app_name": {
+          "type": "STRING"
+        }
+      },
+      "required": [
+        "app_name"
+      ]
+    }
+  },
+  {
+    "name": "find_installed_application",
+    "description": "Checks whether an application, game, or program is installed on the computer. Searches Windows Start Menu (Get-StartApps), Windows Store packages, Registry installations, and PATH. Returns exact matched name, AppID or executable path, and installation status.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "app_name": {
+          "type": "STRING"
+        }
+      },
+      "required": [
+        "app_name"
+      ]
+    }
+  },
+  {
+    "name": "list_running_applications",
+    "description": "Lists currently running user-facing desktop applications with their process names, PIDs, window titles, and RAM usage. Can also search/filter processes by name.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "filter": {
+          "type": "STRING"
+        },
+        "include_background": {
+          "type": "BOOLEAN"
+        }
+      }
+    }
+  },
+  {
+    "name": "get_process_details",
+    "description": "Retrieves deep diagnostic details for a running process: PID, executable path, memory (MB), CPU %, creation time, status, and open window titles.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "name_or_pid": {
+          "type": "STRING"
+        }
+      },
+      "required": [
+        "name_or_pid"
+      ]
+    }
+  },
+  {
+    "name": "control_media_playback",
+    "description": "Controls media playback only. Use this for play/resume, pause, next video/track, previous video/track, or stop. Do NOT use volume actions here; use the separate volume tool for volume changes.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "action": {
+          "type": "STRING",
+          "enum": ["play", "pause", "resume", "next", "previous", "prev", "stop", "play video", "pause video", "resume video", "next video", "previous video", "next track", "previous track"]
+        }
+      },
+      "required": [
+        "action"
+      ]
+    }
+  },
+  {
+    "name": "empty_recycle_bin",
+    "description": "Empties the Windows Recycle Bin to permanently free up disk space.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {}
+    }
+  },
+  {
+    "name": "lock_workstation",
+    "description": "Locks the Windows computer workstation immediately, returning to the lock screen.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {}
+    }
+  },
+  {
+    "name": "open_path_or_file",
+    "description": "Opens a file, document, or directory in its default Windows associated program (e.g. a PDF in PDF reader, an image in Photos, a project folder in Explorer).",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "path": {
+          "type": "STRING"
+        }
+      },
+      "required": [
+        "path"
+      ]
+    }
+  },
+  {
+    "name": "get_system_volume",
+    "description": "Gets the current Windows master audio volume level (0-100) and mute status.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {}
+    }
+  },
+  {
+    "name": "adjust_system_volume",
+    "description": "Increases or decreases Windows master volume by a relative percent or step (e.g. delta=-10 or direction='down', delta=15 or direction='up').",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "delta": {
+          "type": "INTEGER"
+        },
+        "direction": {
+          "type": "STRING"
+        },
+        "amount": {
+          "type": "INTEGER"
+        }
+      }
+    }
+  },
+  {
+    "name": "set_system_volume",
+    "description": "Sets the master Windows audio volume level between 0 and 100 percent.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "level": {
+          "type": "INTEGER"
+        }
+      },
+      "required": [
+        "level"
+      ]
+    }
+  },
+  {
+    "name": "toggle_audio_mute",
+    "description": "Mutes or unmutes the master Windows audio.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "mute": {
+          "type": "BOOLEAN"
+        }
+      }
+    }
+  },
+  {
+    "name": "get_system_status",
+    "description": "Checks the system hardware health metrics including CPU load, RAM usage, battery percent, and OS.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {}
+    }
+  },
+  {
+    "name": "open_web_url",
+    "description": "Opens a website URL or named website (e.g. 'openai', 'netflix', 'github', 'amazon') in the default web browser. Dynamically resolves the official site headless without hardcoded links.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "url": {
+          "type": "STRING",
+          "description": "The URL, domain, or company/website name to open (e.g. 'https://openai.com', 'openai', 'netflix', 'github')."
+        }
+      },
+      "required": [
+        "url"
+      ]
+    }
+  },
+  {
+    "name": "search_web_headless",
+    "description": "Silently searches the live web and Google News/knowledge bases for real-time news, current events, Jensen Huang updates, tech news, Windows scripts, fixes, or information WITHOUT opening any browser windows on the user's screen. Returns parsed headlines, snippets, and answers directly into Meera's brain to speak to the user.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "query": {
+          "type": "STRING",
+          "description": "The topic, person, news event, technical issue, or error message to search for (e.g. 'Jensen Huang latest news', 'powershell get bluetooth battery level windows 11')."
+        }
+      },
+      "required": [
+        "query"
+      ]
+    }
+  },
+  {
+    "name": "search_google",
+    "description": "Performs a Google web search and opens the browser window ONLY and STRICTLY when the user explicitly commands to open the browser or search in browser (e.g. 'browser me search karo', 'open google in browser'). NEVER use this for background answers or technical solutions; use 'search_web_headless' instead.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "query": {
+          "type": "STRING"
+        }
+      },
+      "required": [
+        "query"
+      ]
+    }
+  },
+  {
+    "name": "search_youtube",
+    "description": "Searches for a video, artist, or song on YouTube and opens the results page in the browser.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "query": {
+          "type": "STRING"
+        }
+      },
+      "required": [
+        "query"
+      ]
+    }
+  },
+  {
+    "name": "list_open_windows",
+    "description": "Lists all currently open, visible desktop application windows with their titles and process IDs.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {}
+    }
+  },
+  {
+    "name": "focus_window",
+    "description": "Brings a specific application window to the foreground and focuses it.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "title_query": {
+          "type": "STRING"
+        }
+      },
+      "required": [
+        "title_query"
+      ]
+    }
+  },
+  {
+    "name": "minimize_window",
+    "description": "Minimizes a window by name or partial title.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "title_query": {
+          "type": "STRING"
+        }
+      },
+      "required": [
+        "title_query"
+      ]
+    }
+  },
+  {
+    "name": "maximize_window",
+    "description": "Maximizes a window by name or partial title.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "title_query": {
+          "type": "STRING"
+        }
+      },
+      "required": [
+        "title_query"
+      ]
+    }
+  },
+  {
+    "name": "close_window",
+    "description": "Sends a clean close signal to close a window gracefully (e.g. 'File Explorer', 'Notepad', 'Chrome', 'Settings', 'Downloads', 'Control Panel').",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "title_query": {
+          "type": "STRING"
+        }
+      },
+      "required": [
+        "title_query"
+      ]
+    }
+  },
+  {
+    "name": "get_active_window",
+    "description": "Returns the title and process ID of the window currently in the foreground.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {}
+    }
+  },
+  {
+    "name": "click_screen_element",
+    "description": "Automatically scans the screen for a button, link, or text by name, smoothly glides the mouse cursor to it, and performs a click (left, right, or double-click). Also supports ordinal targeting like 'first point', 'second checkbox', or 'last option'.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "target": {
+          "type": "STRING",
+          "description": "The text, label, or phrase to locate and click on screen."
+        },
+        "action": {
+          "type": "STRING",
+          "description": "Action type: click (left-click), right_click, double_click, or hover."
+        },
+        "ordinal": {
+          "type": "STRING",
+          "description": "Ordinal row index: first, second, third, fourth, or last."
+        }
+      }
+    }
+  },
+  {
+    "name": "select_dropdown_item",
+    "description": "Intelligently selects an option from a dropdown menu. First clicks to open the dropdown menu, waits for options to appear, scans the list, and clicks the desired item.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "dropdown_target": {
+          "type": "STRING",
+          "description": "The name or label of the dropdown menu to open."
+        },
+        "item_name": {
+          "type": "STRING",
+          "description": "The name of the item or option to select from the opened menu."
+        }
+      },
+      "required": [
+        "dropdown_target",
+        "item_name"
+      ]
+    }
+  },
+  {
+    "name": "scroll_page",
+    "description": "Scrolls the page with calibrated speed control and reverse direction support. Supports explicit speed percentages (e.g. '20% speed'), relative adjustments ('slower' decreases by 50%, 'faster' increases), and direction flipping ('reverse', 'down', 'up').",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "direction": {
+          "type": "STRING",
+          "description": "Direction to scroll: 'down', 'up', or 'reverse'."
+        },
+        "speed_percent": {
+          "type": "INTEGER",
+          "description": "Speed percentage, e.g. 20 for 20% speed, 100 for default."
+        },
+        "modifier": {
+          "type": "STRING",
+          "description": "Speed adjustment: 'slower', 'faster', or 'default'."
+        }
+      }
+    }
+  },
+  {
+    "name": "get_screen_elements",
+    "description": "Returns a compact spatial coordinate table of all interactive UI elements, buttons, checkboxes, rows, and links currently on screen.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {}
+    }
+  },
+  {
+    "name": "find_text_in_image",
+    "description": "Takes an image binary file (e.g. screenshot PNG/JPG) and a target text, and returns the exact pixel coordinates (x, y, width, height, center_x, center_y) where that text appears using Windows Native OCR.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "image_path": {
+          "type": "STRING",
+          "description": "The absolute or relative file path to the image to scan."
+        },
+        "target_text": {
+          "type": "STRING",
+          "description": "The text, label, or word to find pixel coordinates for."
+        }
+      },
+      "required": [
+        "image_path",
+        "target_text"
+      ]
+    }
+  },
+  {
+    "name": "get_ui_elements",
+    "description": "Inspects the active foreground window using Windows UI Automation to discover all interactive UI controls, input boxes, clickable buttons, dropdown menus, checkboxes, tabs, and links with their names, control types, and exact screen coordinates.",
+    "parameters": {
+      "type": "OBJECT",
+      "properties": {
+        "filter_type": {
+          "type": "STRING",
+          "description": "Optional control type filter, e.g. 'Button', 'Edit', 'ComboBox', 'CheckBox', 'MenuItem', 'TabItem', 'Hyperlink'."
+        }
+      }
+    }
+  }
+]

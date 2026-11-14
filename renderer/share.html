@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; script-src 'self'; media-src blob:">
+  <title>Share screen</title>
+  <link rel="stylesheet" href="./window-theme.css">
+  <link rel="stylesheet" href="./settings.css">
+  <link rel="stylesheet" href="./share.css">
+</head>
+<body>
+  <main class="settings share-window">
+    <header class="wizard-header">
+      <div class="panel-heading">
+        <button class="wizard-back" type="button" data-wizard-back aria-label="Back to Wizard" title="Back to Wizard">←</button>
+        <h1 class="vision-heading"><span id="vision-indicator" aria-hidden="true"></span><span id="vision-title">Screen vision ready</span></h1>
+      </div>
+      <button type="button" class="window-close" id="close" aria-label="Stop and close screen preview">×</button>
+    </header>
+    <div id="content" class="share-content">
+      <div class="share-preview">
+        <video id="preview" autoplay muted playsinline hidden aria-label="Selected screen preview"></video>
+        <p id="preview-placeholder">Starting screen preview…</p>
+        <span id="paused-banner" hidden>Preview paused</span>
+      </div>
+      <div class="share-controls">
+        <div class="share-actions live-actions" id="live-actions">
+          <button class="action" id="pause" type="button" aria-pressed="false" disabled>Pause</button>
+          <button class="action" id="switch" type="button" disabled>Switch</button>
+          <button class="action" id="stop" type="button" disabled>Stop</button>
+        </div>
+        <label class="vision-mode">
+          <span>Screen Vision Mode<small id="vision-desc">Gemini Auto-Analysis · Streaming frames</small></span>
+          <input type="checkbox" id="vision-toggle" class="switch" checked>
+        </label>
+        <p id="share-status" role="status">Looking for displays…</p>
+      </div>
+    </div>
+  </main>
+  <script src="./wizard-nav.js"></script>
+  <script src="./share.js"></script>
+</body>
+</html>

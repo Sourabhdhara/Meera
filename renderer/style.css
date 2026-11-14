@@ -1,0 +1,230 @@
+:root {
+  --aura-color: rgba(168, 85, 247, 0.65);
+}
+
+body[data-theme="violet"] {
+  --aura-color: rgba(168, 85, 247, 0.65);
+}
+body[data-theme="emerald"] {
+  --aura-color: rgba(52, 211, 153, 0.7);
+}
+body[data-theme="crimson"] {
+  --aura-color: rgba(244, 63, 94, 0.7);
+}
+body[data-theme="celestial"] {
+  --aura-color: rgba(103, 232, 249, 0.8);
+}
+body[data-theme="gold"] {
+  --aura-color: rgba(251, 191, 36, 0.7);
+}
+body[data-theme="rose"] {
+  --aura-color: rgba(244, 114, 182, 0.75);
+}
+body[data-theme="charcoal"] {
+  --aura-color: rgba(226, 232, 240, 0.6);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+  user-select: none;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+#companion {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  cursor: default;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+/* Realistic 3D Ground & Perspective Shadow Surface */
+#meera-ground {
+  position: absolute;
+  bottom: 0px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 160px;
+  height: 28px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* 1. Large Ambient Floor Falloff (Soft Atmospheric bounce) */
+.ground-shadow-blur {
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 130px;
+  height: 16px;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.35) 0%, rgba(20, 10, 30, 0.15) 50%, transparent 80%);
+  border-radius: 50%;
+  filter: blur(4px);
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+/* 2. Heel to Toe Contact Occlusion (Underneath full shoes) */
+.ground-shadow-medium {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90px;
+  height: 12px;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.6) 0%, rgba(10, 5, 20, 0.35) 55%, transparent 85%);
+  border-radius: 50%;
+  filter: blur(2px);
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+/* 3. Left Shoe Heel & Sole Contact */
+.ground-contact-left {
+  position: absolute;
+  bottom: 5px;
+  left: calc(50% - 22px);
+  transform: translateX(-50%);
+  width: 28px;
+  height: 8px;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 65%, transparent 90%);
+  border-radius: 50%;
+  filter: blur(1px);
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+/* 4. Right Shoe Heel & Sole Contact */
+.ground-contact-right {
+  position: absolute;
+  bottom: 5px;
+  left: calc(50% + 22px);
+  transform: translateX(-50%);
+  width: 28px;
+  height: 8px;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 65%, transparent 90%);
+  border-radius: 50%;
+  filter: blur(1px);
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+/* 5. Rim highlight removed (flat cut artifact fix) */
+.ground-glass-rim {
+  display: none;
+}
+
+/* Core Avatar */
+#meera-gif {
+  position: absolute;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  bottom: 0px;
+  width: auto;
+  height: 310px;
+  max-height: 340px;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.35));
+  transform-origin: bottom center;
+  -webkit-app-region: no-drag;
+  cursor: grab;
+  pointer-events: auto;
+  opacity: 1;
+  z-index: 2;
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.4s ease, opacity 0.4s ease;
+}
+
+/* Subtle Interactive Hover & Bounce */
+#meera-gif:hover {
+  transform: scale(1.025) translateY(-2px);
+  filter: drop-shadow(0 14px 20px rgba(0, 0, 0, 0.4)) drop-shadow(0 0 16px var(--aura-color));
+}
+
+#companion:hover #meera-ground {
+  transform: translateX(-50%) scale(1.05);
+  filter: brightness(1.15);
+}
+
+#meera-gif.is-dragging ~ #meera-ground,
+#companion:has(#meera-gif.is-dragging) #meera-ground {
+  transform: translateX(-50%) scale(0.92);
+  opacity: 0.45;
+}
+
+/* Dragging Physics & Tilt */
+#meera-gif.is-dragging {
+  cursor: grabbing;
+  transition: none; /* Instant follow during drag */
+  filter: drop-shadow(0 18px 24px rgba(0, 0, 0, 0.5));
+}
+
+#meera-gif.tilt-right {
+  transform: scale(1.03) rotate(3.5deg) translateY(-4px);
+}
+
+#meera-gif.tilt-left {
+  transform: scale(1.03) rotate(-3.5deg) translateY(-4px);
+}
+
+/* State: Speaking (Warm anime aura or theme color) */
+#companion[data-state="speaking"] #meera-gif {
+  filter: drop-shadow(0 8px 20px rgba(255, 154, 60, 0.55)) drop-shadow(0 14px 16px rgba(0, 0, 0, 0.35));
+  animation: breathing 2.4s ease-in-out infinite;
+}
+
+/* State: Listening / Processing (Adapts directly to the selected theme aura!) */
+#companion[data-state="listening"] #meera-gif {
+  filter: drop-shadow(0 8px 18px var(--aura-color)) drop-shadow(0 12px 14px rgba(0, 0, 0, 0.3));
+  opacity: 1;
+  animation: gentle-sway 4s ease-in-out infinite;
+}
+
+/* State: Resting / Sleeping (Calm resting state, aura dims down softly) */
+#companion[data-state="disconnected"] #meera-gif,
+#companion[data-state="sleeping"] #meera-gif {
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.45));
+  opacity: 0.82;
+  animation: none;
+}
+
+/* State: Connecting / Awakening (Soft pulse during connection) */
+#companion[data-state="connecting"] #meera-gif {
+  filter: drop-shadow(0 6px 14px var(--aura-color)) drop-shadow(0 8px 12px rgba(0, 0, 0, 0.35));
+  opacity: 0.92;
+  animation: gentle-sway 3.5s ease-in-out infinite;
+}
+
+body.animations-disabled *,
+body.animations-disabled *::before,
+body.animations-disabled *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* Smooth breathing animation */
+@keyframes breathing {
+  0%, 100% {
+    transform: scale(1) translateY(0);
+  }
+  50% {
+    transform: scale(1.015) translateY(-2px);
+  }
+}
+
+@keyframes gentle-sway {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-1.5px);
+  }
+}

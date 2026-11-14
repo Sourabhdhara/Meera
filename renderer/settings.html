@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Meera Settings</title>
+  <link rel="stylesheet" href="./window-theme.css">
+  <link rel="stylesheet" href="./settings.css">
+</head>
+<body>
+  <main class="settings">
+    <header class="wizard-header">
+      <div class="panel-heading">
+        <button class="wizard-back" type="button" data-wizard-back aria-label="Back to Wizard" title="Back to Wizard">←</button>
+        <h1>Meera Configuration</h1>
+      </div>
+      <button type="button" class="window-close" id="close" aria-label="Close settings">×</button>
+    </header>
+    <nav aria-label="Settings sections">
+      <button type="button" data-tab="general" aria-pressed="true" aria-controls="general">General</button>
+      <button type="button" data-tab="system" aria-pressed="false" aria-controls="system">System</button>
+      <button type="button" data-tab="about" aria-pressed="false" aria-controls="about">About</button>
+    </nav>
+    <div id="content">
+      <section id="general" class="group" aria-label="General settings">
+        <h2>API configuration</h2>
+        <form class="row" id="api-key-form">
+          <div class="field-group">
+            <label for="key">Gemini API key</label>
+            <input id="key" class="field" type="password" placeholder="Paste Gemini key" required>
+          </div>
+          <button type="submit" class="action">Save</button>
+        </form>
+        <h2>Startup &amp; appearance</h2>
+        <label class="row">
+          <span>Launch at startup<small>Start Meera when Windows logs in</small></span>
+          <input type="checkbox" class="switch" data-setting="autoStart">
+        </label>
+        <label class="row">
+          <span>UI animations<small>Enable motion and transitions</small></span>
+          <input type="checkbox" class="switch" data-setting="animations" checked>
+        </label>
+      </section>
+      <section id="system" class="group" aria-label="System settings" hidden>
+        <h2>Desktop control agent</h2>
+        <div id="health" class="status" role="status">Checking agent…</div>
+        <div class="row"><div>Capabilities<small>App control · Browser · Volume · Brightness · Power · Files · Screenshot · Clipboard</small></div></div>
+      </section>
+      <section id="about" class="group" aria-label="About Meera" hidden>
+        <h2>About Meera</h2>
+        <div class="row">
+          <div>MEERA AI Assistant
+            <small>Version · V2.0.0</small>
+            <small>Engine · Gemini Live</small>
+            <small>Desktop · FastAPI Agent</small>
+            <small>Activation · Manual connect / disconnect</small>
+          </div>
+        </div>
+      </section>
+    </div>
+    <p id="settings-feedback" role="status" hidden></p>
+  </main>
+  <script src="./wizard-nav.js"></script>
+  <script src="./settings.js"></script>
+</body>
+</html>

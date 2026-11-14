@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+dist/
+build/
+
+# WhatsApp Web & MCP Auth Sessions, Caches & Locks
+.wwebjs_auth/
+.wwebjs_cache/
+WhatsApp_MCP_New/.wwebjs_auth/
+WhatsApp_MCP_New/.wwebjs_cache/
+WhatsApp_MCP_New/.mcp-status.json
+WhatsApp_MCP_New/.mcp.lock
+**/.wwebjs_auth/
+**/.wwebjs_cache/
+**/.mcp-status.json
+**/.mcp.lock
+
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+config/mcp-servers.json
+
+# Token Stores & Session Caches
+*-token-store
+*token-store/
+token-store/
+
+# Databases & Runtime State
+*.db
+*.db-journal
+*.db-wal
+*.db.backup
+*.tmp.*
+meera_position.json
+logs/
+*.log
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*~
+

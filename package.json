@@ -1,0 +1,38 @@
+{
+  "name": "meera",
+  "productName": "MEERA",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "app": "electron electron/main.cjs",
+    "electron": "electron electron/main.cjs",
+    "server": "node dist/server.cjs",
+    "start": "cmd /c \"set ELECTRON_RUN_AS_NODE=& electron electron/main.cjs\"",
+    "build": "node scripts/build.js"
+  },
+  "dependencies": {
+    "@google/genai": "^2.4.0",
+    "@tailwindcss/vite": "^4.1.14",
+    "@vitejs/plugin-react": "^5.0.4",
+    "dotenv": "^17.2.3",
+    "express": "^4.21.2",
+    "lucide-react": "^0.546.0",
+    "motion": "^12.23.24",
+    "qrcode-terminal": "^0.12.0",
+    "react": "^19.0.1",
+    "react-dom": "^19.0.1",
+    "screenshot-desktop": "^1.15.8",
+    "sql.js": "^1.15.2",
+    "vite": "^6.2.3",
+    "whatsapp-web.js": "^1.34.8",
+    "ws": "^8.21.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/ws": "^8.18.2",
+    "electron": "^33.2.0",
+    "esbuild": "^0.25.0"
+  }
+}

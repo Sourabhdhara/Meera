@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; script-src 'self'">
+  <title>MCP Server</title>
+  <link rel="stylesheet" href="./window-theme.css">
+  <link rel="stylesheet" href="./settings.css">
+</head>
+<body>
+  <main class="settings">
+    <header class="wizard-header">
+      <div class="panel-heading">
+        <button class="wizard-back" type="button" data-wizard-back aria-label="Back to Wizard" title="Back to Wizard">←</button>
+        <h1>MCP Server</h1>
+      </div>
+      <button type="button" class="window-close" id="close" aria-label="Close Wizard">×</button>
+    </header>
+    <div id="content">
+      <p class="status" id="agent-status" role="status">Checking desktop agent…</p>
+    </div>
+  </main>
+  <script src="./wizard-nav.js"></script>
+  <script src="./mcp.js"></script>
+</body>
+</html>

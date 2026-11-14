@@ -1,0 +1,67 @@
+.recall-toolbar, .recall-filters, .category-grid, .seed-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.recall-toolbar {
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line);
+  background: #ffffff08;
+}
+
+.recall-toolbar #count { flex: 1 1 auto; }
+
+.recall-chip {
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff08;
+  color: var(--muted);
+  font: 11px var(--mono);
+}
+
+.recall-chip:hover { color: var(--text); background: #ffffff13; }
+.recall-chip[aria-pressed="true"], #seed {
+  border-color: #22d3ee50;
+  background: #22d3ee14;
+  color: var(--cyan);
+}
+.recall-filters .recall-chip { border-radius: 999px; }
+#seed-form {
+  margin-bottom: 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #080812;
+}
+#seed-form fieldset { margin: 0 0 10px; padding: 0; border: 0; }
+#seed-form legend, #seed-form label { color: var(--muted); font: 11px var(--mono); }
+.category-grid { margin-top: 7px; }
+#memory-text { resize: vertical; min-height: 60px; }
+.seed-actions { justify-content: flex-end; margin-top: 8px; }
+.recall-list { display: grid; gap: 8px; margin: 12px 0 0; padding: 0; list-style: none; }
+.memory-entry {
+  --category: #a5b4fc;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  padding: 11px;
+  border: 1px solid color-mix(in srgb, var(--category) 25%, transparent);
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--category) 6%, #090910);
+}
+.memory-entry[data-category="identity"] { --category: #fbbf24; }
+.memory-entry[data-category="preference"] { --category: #f472b6; }
+.memory-entry[data-category="goal"] { --category: #34d399; }
+.memory-entry[data-category="project"] { --category: #22d3ee; }
+.memory-entry[data-category="relationship"] { --category: #c084fc; }
+.memory-entry[data-category="emotional"] { --category: #fb7185; }
+.memory-entry[data-category="practice"] { --category: #2dd4bf; }
+.memory-category { align-self: center; color: var(--category); font: 11px var(--mono); }
+.memory-entry p { grid-column: 1 / -1; margin: 0; font-size: 13px; line-height: 1.45; overflow-wrap: anywhere; white-space: pre-wrap; }
+.remove-memory:hover, #recall-status.error { color: #fda4af; }
+.empty-memory, #recall-status { color: var(--muted); font-size: 12px; }
+.empty-memory { padding: 12px 0; text-align: center; }

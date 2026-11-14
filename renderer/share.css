@@ -1,0 +1,76 @@
+.settings.share-window {
+  border-color: #22d3ee38;
+  background: radial-gradient(ellipse at top left, #17255455, transparent 68%), #020617f2;
+  box-shadow: inset 0 1px #a5f3fc12;
+}
+
+.settings.share-window:has(#vision-indicator.paused) { border-color: #fbbf2440; }
+
+#content.share-content {
+  display: grid;
+  grid-template-rows: minmax(110px, 1fr) auto;
+  gap: 10px;
+  padding: 10px 14px 12px;
+}
+
+.share-preview {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: #0f172a;
+}
+
+.share-preview video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.share-preview p, #share-status {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.share-controls {
+  display: grid;
+  gap: 8px;
+}
+
+.share-controls label {
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.share-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.settings .vision-heading { display: flex; align-items: center; gap: 8px; font: 700 12px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+#vision-indicator { flex: 0 0 8px; height: 8px; border-radius: 50%; background: #64748b; }
+#vision-indicator.active { background: #22d3ee; box-shadow: 0 0 8px #22d3ee66; }
+#vision-indicator.paused { background: #fbbf24; }
+.share-preview video.paused { opacity: .25; filter: blur(4px); }
+#paused-banner { position: relative; padding: 5px 8px; border-radius: 5px; background: #451a03c9; color: #fcd34d; font: 11px Consolas, monospace; text-transform: uppercase; }
+.live-actions #pause { flex: 1; border-color: #f59e0b42; background: #f59e0b1a; color: #fcd34d; }
+.live-actions #pause[aria-pressed="true"] { border-color: #22d3ee42; background: #22d3ee1a; color: #67e8f9; }
+.live-actions #switch { border-color: var(--line); background: #ffffff0d; }
+.live-actions #stop { border-color: #fb71854a; background: #fb718519; color: #fda4af; }
+.live-actions .action:disabled { opacity: .68; cursor: default; }
+.vision-mode { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
+.vision-mode small { display: block; margin-top: 3px; color: var(--muted); font-size: 10px; font-weight: 400; }
+.vision-mode .switch:disabled { cursor: default; }
+
+#share-status { text-align: left; }
+#share-status.error { color: #fda4af; }
+#share-status.live { color: #67e8f9; }
