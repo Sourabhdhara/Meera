@@ -2,12 +2,34 @@ import { BaseTool } from "../base";
 
 export class ReadFileTool extends BaseTool {
   name = "read_file";
-  description = "Reads text contents from a local file safely. Supports path shortcuts like '~/Desktop' or '~/Downloads'.";
+  description = "Reads text contents from a local file safely. Supports path shortcuts like '~/Desktop'. Optionally specify start_line and end_line for surgical code reading.";
 
-  async run(args: { path: string; max_characters?: number }) {
-    const res = await this.files.readText(args.path, args.max_characters);
+  async run(args: { path: string; max_characters?: number; start_line?: number; end_line?: number }) {
+    const res = await this.files.readText(args.path, args.max_characters, args.start_line, args.end_line);
     if (!res.ok) this.fail(res.error || "Read failed");
-    return { result: res.content, path: res.path, truncated: res.truncated };
+    return { result: res.content, path: res.path, total_lines: res.totalLines, truncated: res.truncated };
+  }
+}
+
+export class EditFileTool extends BaseTool {
+  name = "edit_file";
+  description = "Surgically edits a file by finding an exact target snippet and replacing it with the replacement snippet. Guarantees safety without rewriting the entire file.";
+
+  async run(args: { path: string; target: string; replacement: string }) {
+    const res = await this.files.editFileContent(args.path, args.target, args.replacement);
+    if (!res.ok) this.fail(res.error || "Edit failed");
+    return { result: `Successfully replaced ${res.replacements} occurrence(s) in '${args.path}'.`, path: res.path };
+  }
+}
+
+export class SearchCodebaseTool extends BaseTool {
+  name = "search_codebase";
+  description = "Searches for text, function names, variables, or error strings across all source files in a directory (like ripgrep/grep), returning matching files and line numbers.";
+
+  async run(args: { query: string; search_directory?: string; max_results?: number }) {
+    const res = await this.files.searchCodebase(args.query, args.search_directory || ".", args.max_results || 30);
+    if (!res.ok) this.fail(res.error || "Codebase search failed");
+    return { matches: res.matches, total_matches: res.count };
   }
 }
 

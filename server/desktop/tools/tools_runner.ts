@@ -110,3 +110,27 @@ export class DeleteAutomationTool extends BaseTool {
   }
 }
 
+export class TraceGitChangesTool extends BaseTool {
+  name = "trace_git_changes";
+  description = "Performs deep forensic inspection on a Git repository: inspects recent commits, unstaged changes, modified files, diff summaries, or what changed since last night.";
+
+  async run(args: { mode?: "status" | "recent_commits" | "diff" | "last_night"; repo_path?: string; max_commits?: number }) {
+    const mode = args?.mode || "status";
+    const repoPath = args?.repo_path || ".";
+    const maxCommits = args?.max_commits || 5;
+
+    let gitCmd = "git status -s";
+    if (mode === "recent_commits") {
+      gitCmd = `git log -n ${maxCommits} --oneline --decorate`;
+    } else if (mode === "diff") {
+      gitCmd = `git diff --stat`;
+    } else if (mode === "last_night") {
+      gitCmd = `git log --since="yesterday" --oneline && git diff --stat`;
+    }
+
+    const res = await this.script.runPowerShell(`Set-Location "${repoPath}"; ${gitCmd}`, 15);
+    if (!res.ok) this.fail(res.stderr || "Git forensic trace failed");
+    return { mode, output: res.stdout || res.result || "No changes or commits detected." };
+  }
+}
+

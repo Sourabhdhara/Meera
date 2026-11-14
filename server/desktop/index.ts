@@ -35,6 +35,8 @@ import {
 
 import {
   ReadFileTool,
+  EditFileTool,
+  SearchCodebaseTool,
   WriteFileTool,
   AppendFileTool,
   ListFolderTool,
@@ -82,7 +84,8 @@ import {
   SaveAutomationTool,
   RunAutomationTool,
   ListAutomationsTool,
-  DeleteAutomationTool
+  DeleteAutomationTool,
+  TraceGitChangesTool
 } from "./tools/tools_runner";
 
 import {
@@ -123,6 +126,8 @@ const toolsList: BaseTool[] = [
   new DisableAutoStartTool(),
 
   new ReadFileTool(),
+  new EditFileTool(),
+  new SearchCodebaseTool(),
   new WriteFileTool(),
   new AppendFileTool(),
   new ListFolderTool(),
@@ -163,6 +168,7 @@ const toolsList: BaseTool[] = [
   new RunAutomationTool(),
   new ListAutomationsTool(),
   new DeleteAutomationTool(),
+  new TraceGitChangesTool(),
 
   new ShowDesktopNotificationTool(),
   new GetNetworkStatusTool(),

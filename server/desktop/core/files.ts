@@ -23,19 +23,115 @@ export class FileEngine {
     return path.resolve(p);
   }
 
-  public async readText(targetPath: string, maxChars: number = 15000): Promise<{ ok: boolean; content?: string; path: string; truncated?: boolean; error?: string }> {
+  public async readText(targetPath: string, maxChars: number = 15000, startLine?: number, endLine?: number): Promise<{ ok: boolean; content?: string; path: string; totalLines?: number; truncated?: boolean; error?: string }> {
     const p = this.resolvePath(targetPath);
     try {
       const data = await fs.promises.readFile(p, "utf-8");
+      const lines = data.split(/\r?\n/);
+      const totalLines = lines.length;
+
+      if (typeof startLine === "number" || typeof endLine === "number") {
+        const s = Math.max(1, startLine || 1) - 1;
+        const e = Math.min(totalLines, endLine || totalLines);
+        const selected = lines.slice(s, e).map((line, idx) => `${s + idx + 1}: ${line}`).join("\n");
+        return {
+          ok: true,
+          path: p,
+          totalLines,
+          truncated: false,
+          content: selected
+        };
+      }
+
       const truncated = data.length > maxChars;
       return {
         ok: true,
         path: p,
+        totalLines,
         truncated,
         content: truncated ? data.slice(0, maxChars) + "\n...[truncated]" : data
       };
     } catch (err: any) {
       return { ok: false, path: p, error: `Failed reading '${p}': ${err.message}` };
+    }
+  }
+
+  public async editFileContent(targetPath: string, target: string, replacement: string): Promise<{ ok: boolean; path: string; replacements?: number; error?: string }> {
+    const p = this.resolvePath(targetPath);
+    try {
+      if (!fs.existsSync(p)) {
+        return { ok: false, path: p, error: `File not found: '${p}'` };
+      }
+      const data = await fs.promises.readFile(p, "utf-8");
+      if (!data.includes(target)) {
+        return { ok: false, path: p, error: `Target snippet not found in file. Make sure target matches exact indentation and whitespace.` };
+      }
+      // Count occurrences
+      let count = 0;
+      let pos = 0;
+      while ((pos = data.indexOf(target, pos)) !== -1) {
+        count++;
+        pos += target.length;
+      }
+      const updated = data.split(target).join(replacement);
+      await fs.promises.writeFile(p, updated, "utf-8");
+      return { ok: true, path: p, replacements: count };
+    } catch (err: any) {
+      return { ok: false, path: p, error: `Failed editing '${p}': ${err.message}` };
+    }
+  }
+
+  public async searchCodebase(query: string, searchDir: string = ".", maxResults: number = 30): Promise<{ ok: boolean; matches: Array<{ file: string; line: number; text: string }>; count: number; error?: string }> {
+    const rootDir = this.resolvePath(searchDir);
+    const matches: Array<{ file: string; line: number; text: string }> = [];
+
+    const ignoreDirs = new Set(["node_modules", ".git", "dist", ".next", "build", ".venv", "venv", "__pycache__"]);
+
+    const walk = async (dir: string) => {
+      if (matches.length >= maxResults) return;
+      try {
+        const entries = await fs.promises.readdir(dir, { withFileTypes: true });
+        for (const entry of entries) {
+          if (matches.length >= maxResults) break;
+          const fullPath = path.join(dir, entry.name);
+          if (entry.isDirectory()) {
+            if (!ignoreDirs.has(entry.name)) {
+              await walk(fullPath);
+            }
+          } else if (entry.isFile()) {
+            // Check file size (< 2MB to prevent lockup)
+            try {
+              const stat = await fs.promises.stat(fullPath);
+              if (stat.size > 2 * 1024 * 1024) continue;
+              const content = await fs.promises.readFile(fullPath, "utf-8");
+              if (content.toLowerCase().includes(query.toLowerCase())) {
+                const lines = content.split(/\r?\n/);
+                for (let i = 0; i < lines.length; i++) {
+                  if (lines[i].toLowerCase().includes(query.toLowerCase())) {
+                    matches.push({
+                      file: path.relative(rootDir, fullPath),
+                      line: i + 1,
+                      text: lines[i].trim().slice(0, 160)
+                    });
+                    if (matches.length >= maxResults) break;
+                  }
+                }
+              }
+            } catch {
+              // Ignore binary or unreadable files
+            }
+          }
+        }
+      } catch (err: any) {
+        // Skip inaccessible dirs
+      }
+    };
+
+    try {
+      await walk(rootDir);
+      return { ok: true, matches, count: matches.length };
+    } catch (err: any) {
+      return { ok: false, matches: [], count: 0, error: err.message };
     }
   }
 
