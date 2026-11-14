@@ -609,4 +609,75 @@ export class ScreenEngine {
       return { ok: false, error: err.message };
     }
   }
+
+  public async ocrScannedPdf(pdfPath: string, maxPages: number = 5): Promise<{ ok: boolean; text?: string; pagesProcessed?: number; error?: string }> {
+    const p = path.resolve(pdfPath);
+    if (!fs.existsSync(p)) return { ok: false, error: `PDF file not found: '${p}'` };
+
+    return new Promise((resolve) => {
+      // Use Windows.Data.Pdf + Windows.Media.Ocr natively in PowerShell without external tools
+      const psScript = `
+        $ErrorActionPreference = 'Stop'
+        Add-Type -AssemblyName System.Drawing
+        [Windows.Storage.StorageFile, Windows.Storage, ContentType = WindowsRuntime] | Out-Null
+        [Windows.Data.Pdf.PdfDocument, Windows.Data.Pdf, ContentType = WindowsRuntime] | Out-Null
+        [Windows.Media.Ocr.OcrEngine, Windows.Media.Ocr, ContentType = WindowsRuntime] | Out-Null
+
+        $fileTask = [Windows.Storage.StorageFile]::GetFileFromPathAsync("${p.replace(/\\/g, "\\\\")}")
+        $file = $fileTask.GetAwaiter().GetResult()
+        $pdfTask = [Windows.Data.Pdf.PdfDocument]::LoadFromFileAsync($file)
+        $pdf = $pdfTask.GetAwaiter().GetResult()
+
+        $engine = [Windows.Media.Ocr.OcrEngine]::TryCreateFromUserProfileLanguages()
+        $total = [Math]::Min($pdf.PageCount, ${maxPages})
+        $allText = @()
+
+        for ($i = 0; $i -lt $total; $i++) {
+            $page = $pdf.GetPage($i)
+            $memStream = New-Object Windows.Storage.Streams.InMemoryRandomAccessStream
+            $renderTask = $page.RenderToStreamAsync($memStream)
+            $renderTask.GetAwaiter().GetResult()
+
+            $decoderTask = [Windows.Graphics.Imaging.BitmapDecoder]::CreateAsync($memStream)
+            $decoder = $decoderTask.GetAwaiter().GetResult()
+            $bmpTask = $decoder.GetSoftwareBitmapAsync()
+            $softwareBmp = $bmpTask.GetAwaiter().GetResult()
+
+            $ocrTask = $engine.RecognizeAsync($softwareBmp)
+            $ocrResult = $ocrTask.GetAwaiter().GetResult()
+
+            if ($ocrResult.Text) {
+                $allText += "--- Page $($i+1) ---"
+                $allText += $ocrResult.Text
+            }
+        }
+
+        if ($allText.Count -gt 0) {
+            [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+            Write-Output ($allText -join [Environment]::NewLine)
+        }
+      `;
+
+      const encoded = Buffer.from(psScript, "utf16le").toString("base64");
+      const child = spawn("powershell.exe", ["-NoProfile", "-NonInteractive", "-EncodedCommand", encoded], {
+        windowsHide: true,
+        stdio: ["ignore", "pipe", "pipe"]
+      });
+
+      let stdout = "";
+      let stderr = "";
+      child.stdout.on("data", d => { stdout += d.toString(); });
+      child.stderr.on("data", d => { stderr += d.toString(); });
+
+      child.on("close", (code) => {
+        if (code === 0 && stdout.trim().length > 0) {
+          resolve({ ok: true, text: stdout.trim(), pagesProcessed: maxPages });
+        } else {
+          resolve({ ok: false, error: stderr.trim() || "No text could be extracted via OCR from this PDF." });
+        }
+      });
+
+      child.on("error", (err) => resolve({ ok: false, error: err.message }));
+    });
+  }
 }
