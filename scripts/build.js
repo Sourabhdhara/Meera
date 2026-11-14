@@ -25,6 +25,15 @@ await esbuild.build({
 
 console.log("[Build] Successfully compiled dist/server.cjs!");
 
+// Copy default directives data to dist/data
+const dataDir = path.join(distDir, "data");
+if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+const directivesSrc = path.resolve("server/data/default_directives.json");
+if (fs.existsSync(directivesSrc)) {
+  fs.copyFileSync(directivesSrc, path.join(dataDir, "default_directives.json"));
+  console.log("[Build] Copied default_directives.json to dist/data/default_directives.json.");
+}
+
 // Copy native helper scripts (popup.ps1) to dist
 const popupSrc = path.resolve("server/desktop/core/popup.ps1");
 const popupDest = path.join(distDir, "popup.ps1");

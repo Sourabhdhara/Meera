@@ -616,7 +616,10 @@ export async function dbRemoveObsoleteSettings(): Promise<void> {
 
 function syncCoreDirectives(db: Database): void {
   try {
+    const root = process.env.MEERA_APP_ROOT || process.cwd();
     const seedCandidates = [
+      path.join(root, "server", "data", "default_directives.json"),
+      path.join(root, "dist", "data", "default_directives.json"),
       path.join(__dirname, "data", "default_directives.json"),
       path.join(__dirname, "..", "server", "data", "default_directives.json"),
       path.join(process.cwd(), "server", "data", "default_directives.json")
