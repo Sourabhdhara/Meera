@@ -1,6 +1,8 @@
 import esbuild from "esbuild";
 import fs from "fs";
 import path from "path";
+import cp from "child_process";
+import electron from "electron";
 
 console.log("[Build] Building Node.js server from server/server.ts...");
 
@@ -9,9 +11,12 @@ if (!fs.existsSync(distDir)) {
   fs.mkdirSync(distDir, { recursive: true });
 }
 
+const isProduction = process.argv.includes("--production") || process.argv.includes("--bytecode");
+const rawBundlePath = isProduction ? path.join(distDir, "server.raw.cjs") : path.join(distDir, "server.cjs");
+
 await esbuild.build({
   entryPoints: ["server/server.ts"],
-  outfile: "dist/server.cjs",
+  outfile: rawBundlePath,
   bundle: true,
   platform: "node",
   target: "node20",
@@ -20,10 +25,54 @@ await esbuild.build({
   banner: {
     js: "process.env.NODE_ENV = process.env.NODE_ENV || 'production';",
   },
-  sourcemap: true,
+  sourcemap: !isProduction,
 });
 
-console.log("[Build] Successfully compiled dist/server.cjs!");
+if (isProduction) {
+  console.log("[Build] Compiling server bundle into protected V8 Bytecode (.jsc)...");
+  const jscPath = path.join(distDir, "server.jsc");
+  
+  // Compile via Electron's exact V8 engine binary
+  cp.execFileSync(electron, [
+    "-e",
+    `require("bytenode").compileFile({ filename: ${JSON.stringify(rawBundlePath)}, output: ${JSON.stringify(jscPath)}, compileAsModule: true })`
+  ]);
+
+  // Remove the readable raw bundle file
+  if (fs.existsSync(rawBundlePath)) {
+    fs.unlinkSync(rawBundlePath);
+  }
+
+  // Create ultra-resilient, clean bootstrap loader at dist/server.cjs
+  const bootstrapLoader = `/* ===========================================================================
+ * MEERA V2 — Protected V8 Bytecode Loader
+ * ========================================================================= */
+'use strict';
+const path = require('path');
+const fs = require('fs');
+const bytenode = require('bytenode');
+
+const bytecodePath = path.join(__dirname, 'server.jsc');
+
+if (!fs.existsSync(bytecodePath)) {
+  console.error('[MEERA Fatal] Protected bytecode bundle server.jsc not found at:', bytecodePath);
+  process.exit(1);
+}
+
+try {
+  // Execute protected V8 machine bytecode
+  require(bytecodePath);
+} catch (err) {
+  console.error('[MEERA Fatal] Failed to load protected V8 bytecode bundle:', err);
+  process.exit(1);
+}
+`;
+
+  fs.writeFileSync(path.join(distDir, "server.cjs"), bootstrapLoader, "utf8");
+  console.log("[Build] Successfully compiled and protected: dist/server.jsc (with bootstrap dist/server.cjs)!");
+} else {
+  console.log("[Build] Successfully compiled dist/server.cjs (Development mode)!");
+}
 
 // Copy default directives data to dist/data
 const dataDir = path.join(distDir, "data");
