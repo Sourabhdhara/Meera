@@ -487,17 +487,47 @@ export class SystemEngine {
     }
   }
 
-  public getMetrics(): Record<string, any> {
+  public async getMetrics(): Promise<Record<string, any>> {
     const cpus = os.cpus();
     const totalMem = os.totalmem();
     const freeMem = os.freemem();
     const usedMem = totalMem - freeMem;
+
+    // Real-Time CPU Frequency vs Base Speed (matches Windows Task Manager):
+    // Win32_Processor only returns static MaxClockSpeed for both fields.
+    // Real-time dynamic frequency requires polling the Windows Performance Counter!
+    let baseSpeedGHz = Math.round((cpus[0]?.speed || 3500) / 100) / 10;
+    let currentSpeedGHz = baseSpeedGHz;
+    let cpuLoadPercent = 0;
+
+    try {
+      const ps = `
+        $base = (Get-CimInstance Win32_Processor -ErrorAction SilentlyContinue | Select-Object -First 1 MaxClockSpeed).MaxClockSpeed
+        $perfPct = (Get-Counter '\\Processor Information(_Total)\\% of Maximum Frequency' -ErrorAction SilentlyContinue).CounterSamples[0].CookedValue
+        $load = (Get-Counter '\\Processor(_Total)\\% Processor Time' -ErrorAction SilentlyContinue).CounterSamples[0].CookedValue
+        Write-Output "$base|$perfPct|$load"
+      `;
+      const res = await this.runPowerShell(ps, 3000);
+      if (res.ok && res.stdout) {
+        const parts = res.stdout.trim().split("|");
+        const bMHz = parseFloat(parts[0]) || cpus[0]?.speed || 3500;
+        const pPct = parseFloat(parts[1]) || 100;
+        const lPct = parseFloat(parts[2]) || 0;
+        baseSpeedGHz = Math.round((bMHz / 1000) * 100) / 100;
+        currentSpeedGHz = Math.round(((bMHz * pPct) / 100000) * 100) / 100;
+        cpuLoadPercent = Math.round(lPct);
+      }
+    } catch {}
+
     return {
       os: `${os.type()} ${os.release()} (${os.arch()})`,
       hostname: os.hostname(),
       uptime_hours: Math.round((os.uptime() / 3600) * 10) / 10,
       cpu_cores: cpus.length,
       cpu_model: cpus[0]?.model || "Unknown CPU",
+      cpu_base_speed_ghz: baseSpeedGHz,
+      cpu_current_speed_ghz: currentSpeedGHz,
+      cpu_load_percent: cpuLoadPercent,
       ram_total_gb: Math.round((totalMem / (1024 * 1024 * 1024)) * 10) / 10,
       ram_used_gb: Math.round((usedMem / (1024 * 1024 * 1024)) * 10) / 10,
       ram_percent: Math.round((usedMem / totalMem) * 100),

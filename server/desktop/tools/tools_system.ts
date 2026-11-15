@@ -166,10 +166,10 @@ export class ToggleMuteTool extends BaseTool {
 
 export class SystemStatusTool extends BaseTool {
   name = "get_system_status";
-  description = "Checks the system hardware health metrics including CPU load, RAM usage, battery percent, and OS.";
+  description = "Checks the system hardware health metrics including real-time CPU current clock speed vs base clock speed (in GHz), CPU load %, RAM usage, battery percent, and OS.";
 
   async run() {
-    return { result: this.system.getMetrics() };
+    return { result: await this.system.getMetrics() };
   }
 }
 
