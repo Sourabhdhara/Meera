@@ -1,23 +1,11 @@
-﻿<#
+<#
 .SYNOPSIS
-    MEERA AI Companion — Ultra-Light 2MB Web Bootstrapper & Installer
+    MEERA AI Companion — Ultra-Light Web Bootstrapper & Installer
     Installs MEERA securely into C:\ProgramData\MEERA\ and configures Desktop Shortcut.
 #>
 
 $ErrorActionPreference = "Stop"
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-
-# UI Branding Helper
-function Write-Branding {
-    Clear-Host
-    Write-Host "==========================================================" -ForegroundColor Magenta
-    Write-Host "                🌸 MEERA AI COMPANION 🌸                " -ForegroundColor White -BackgroundColor DarkMagenta
-    Write-Host "          Next-Gen Autonomous AI Desktop OS Companion     " -ForegroundColor Cyan
-    Write-Host "==========================================================" -ForegroundColor Magenta
-    Write-Host ""
-}
-
-Write-Branding
 
 # 1. Target Directories
 $VaultRoot = "C:\ProgramData\MEERA"
@@ -27,7 +15,7 @@ $UserAppData = Join-Path $env:APPDATA "MEERA"
 
 Write-Host "[-] Preparing Secure Installation Vault..." -ForegroundColor Gray
 
-# Create ProgramData vault (hidden system style)
+# Create ProgramData vault
 if (-not (Test-Path $VaultRoot)) {
     New-Item -Path $VaultRoot -ItemType Directory -Force | Out-Null
     try {
@@ -42,7 +30,7 @@ if (-not (Test-Path $UserAppData)) { New-Item -Path $UserAppData -ItemType Direc
 
 Write-Host "[✓] Vault initialized at $VaultRoot" -ForegroundColor Green
 
-# 2. Check Node/Electron Runtime Prerequisite
+# 2. Check Node Runtime Prerequisite
 Write-Host "[-] Checking Runtime Environment..." -ForegroundColor Gray
 $HasNode = $null
 try {
@@ -51,39 +39,51 @@ try {
 } catch {}
 
 if (-not $HasNode) {
-    Write-Host "[!] Installing ultra-fast Node.js LTS Runtime environment..." -ForegroundColor Yellow
+    Write-Host "[!] Installing Node.js LTS Runtime environment..." -ForegroundColor Yellow
     $NodeMsiUrl = "https://nodejs.org/dist/v20.18.0/node-v20.18.0-x64.msi"
     $TempMsi = Join-Path $env:TEMP "nodejs-lts.msi"
     Invoke-WebRequest -Uri $NodeMsiUrl -OutFile $TempMsi -UseBasicParsing
     Start-Process msiexec.exe -ArgumentList "/i `"$TempMsi`" /quiet /norestart" -Wait
     Remove-Item $TempMsi -Force -ErrorAction SilentlyContinue
-    $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+    $machinePath = [System.Environment]::GetEnvironmentVariable("Path", [System.EnvironmentVariableTarget]::Machine)
+    $userPath = [System.Environment]::GetEnvironmentVariable("Path", [System.EnvironmentVariableTarget]::User)
+    $env:Path = "$machinePath;$userPath"
 }
 
 # 3. Stream Protected Core Payload
-Write-Host "[-] Fetching Latest Encrypted Neural Core from Release..." -ForegroundColor Gray
+Write-Host "[-] Fetching Latest Encrypted Neural Core..." -ForegroundColor Gray
 $ReleaseApi = "https://api.github.com/repos/Sourabhdhara/Meera/releases/latest"
 $TempZip = Join-Path $VaultRoot "meera-core-stream.zip"
 
+$downloaded = $false
 try {
-    $ReleaseInfo = Invoke-RestMethod -Uri $ReleaseApi -Headers @{"User-Agent"="MEERA-Installer"} -TimeoutSec 15
+    $ReleaseInfo = Invoke-RestMethod -Uri $ReleaseApi -Headers @{"User-Agent"="MEERA-Installer"} -TimeoutSec 10
     $CoreAsset = $ReleaseInfo.assets | Where-Object { $_.name -eq "meera-core.zip" } | Select-Object -First 1
     if ($CoreAsset) {
-        Write-Host "[-] Streaming payload version $($ReleaseInfo.tag_name) ($([math]::Round($CoreAsset.size / 1MB, 2)) MB)..." -ForegroundColor Cyan
         Invoke-WebRequest -Uri $CoreAsset.browser_download_url -OutFile $TempZip -UseBasicParsing
-    } else {
-        throw "Core asset not found in release"
+        $downloaded = $true
     }
-} catch {
-    Write-Host "[!] Note: Remote release asset not yet published; deploying from local workspace staging..." -ForegroundColor Yellow
-    $LocalZip = Join-Path $PSScriptRoot "..\release-dist\meera-core.zip"
-    if (-not (Test-Path $LocalZip)) { $LocalZip = "release-dist\meera-core.zip" }
-    if (-not (Test-Path $LocalZip)) { $LocalZip = Join-Path $PSScriptRoot "meera-core.zip" }
+} catch {}
 
-    if (Test-Path $LocalZip) {
-        Copy-Item -Path $LocalZip -Destination $TempZip -Force
+if (-not $downloaded) {
+    Write-Host "[!] Deploying from local payload staging..." -ForegroundColor Yellow
+    $searchPaths = @(
+        (Join-Path $PSScriptRoot "..\release-dist\meera-core.zip"),
+        (Join-Path $PSScriptRoot "meera-core.zip"),
+        "release-dist\meera-core.zip"
+    )
+    $found = $null
+    foreach ($p in $searchPaths) {
+        if (Test-Path $p) {
+            $found = $p
+            break
+        }
+    }
+
+    if ($found) {
+        Copy-Item -Path $found -Destination $TempZip -Force
     } else {
-        Write-Error "No local or remote payload found to install!"
+        Write-Error "No payload found to install!"
         exit 1
     }
 }
@@ -92,9 +92,15 @@ Write-Host "[-] Extracting Protected Bytecode Core into Vault..." -ForegroundCol
 Expand-Archive -Path $TempZip -DestinationPath $CoreDir -Force
 Remove-Item $TempZip -Force -ErrorAction SilentlyContinue
 
+# Copy assets folder into core if present
+$localAssets = Join-Path $PSScriptRoot "..\assets"
+if (Test-Path $localAssets) {
+    Copy-Item -Path $localAssets -Destination (Join-Path $CoreDir "assets") -Recurse -Force -ErrorAction SilentlyContinue
+}
+
 Write-Host "[✓] Core neural engine installed successfully!" -ForegroundColor Green
 
-# 4. Install Minimal Dependencies if needed
+# 4. Link minimal dependencies
 Set-Location $CoreDir
 if (-not (Test-Path "$CoreDir\node_modules\bytenode")) {
     Write-Host "[-] Linking production dependencies..." -ForegroundColor Gray
@@ -122,12 +128,8 @@ $StartShortcutPath = Join-Path $StartMenuPath "MEERA.lnk"
 Copy-Item $ShortcutPath $StartShortcutPath -Force -ErrorAction SilentlyContinue
 
 Write-Host "[✓] Shortcuts created!" -ForegroundColor Green
-Write-Host ""
-Write-Host "==========================================================" -ForegroundColor Magenta
-Write-Host "   🌸 MEERA HAS BEEN SUCCESSFULLY INSTALLED & CONFIGURED!  " -ForegroundColor White -BackgroundColor DarkGreen
-Write-Host "==========================================================" -ForegroundColor Magenta
-Write-Host ""
 Write-Host "Launching MEERA now..." -ForegroundColor Cyan
 
-# Launch MEERA
+# 6. Launch MEERA
 Start-Process "npx.cmd" -ArgumentList "electron electron\main.cjs" -WorkingDirectory $CoreDir
+exit 0
