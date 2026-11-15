@@ -698,8 +698,8 @@ async function startServer() {
             responseModalities: [Modality.AUDIO],
             realtimeInputConfig: {
               automaticActivityDetection: {
-                prefixPaddingMs: 40,
-                silenceDurationMs: 300
+                prefixPaddingMs: 80,
+                silenceDurationMs: 600
               }
             },
             speechConfig: {
