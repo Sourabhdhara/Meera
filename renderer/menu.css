@@ -8,107 +8,110 @@
 .menu-title {
   display: flex;
   align-items: center;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 8px 12px;
   margin: 0;
-  color: #ffffff;
-  font-size: 15px;
+  color: var(--text);
+  font-size: 18px;
   font-weight: 800;
+  line-height: 1.1;
   letter-spacing: .08em;
 }
 
 .menu-title small {
-  padding: 3px 8px;
-  border: 1px solid rgba(56, 189, 248, 0.35);
-  border-radius: 6px;
-  background: rgba(56, 189, 248, 0.1);
+  padding: 4px 9px;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.12);
   color: var(--cyan);
   font-family: var(--mono);
   font-size: 9px;
   font-weight: 700;
   line-height: 1;
   letter-spacing: .12em;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.2);
 }
 
 .menu-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: repeat(2, 1fr);
-  gap: 12px;
-  padding: 16px 18px 18px;
+  grid-template-rows: repeat(2, minmax(56px, 1fr));
+  gap: 10px;
+  overflow: auto;
+  padding: 14px 16px 16px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
 }
 
-/* Iconic Flagship Cards */
 .menu-grid button {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
-  padding: 18px 12px;
+  padding: 12px;
   border: 1px solid var(--line);
-  border-radius: 16px;
-  background: var(--bg-card);
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
   box-shadow: 
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 4px 16px rgba(0, 0, 0, 0.25);
-  color: var(--text-dim);
+    0 4px 15px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  color: var(--text);
   transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   font-weight: 600;
+  font-size: 12px;
 }
 
 .menu-grid button:hover {
   transform: translateY(-2px);
-  border-color: rgba(56, 189, 248, 0.45);
-  background: var(--bg-card-hover);
+  border-color: var(--cyan);
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.15) 0%, rgba(129, 140, 248, 0.08) 100%);
   box-shadow: 
-    inset 0 1px 0 rgba(255, 255, 255, 0.16),
-    0 8px 24px rgba(0, 0, 0, 0.4),
-    0 0 16px rgba(56, 189, 248, 0.18);
-  color: #ffffff;
+    0 8px 25px rgba(0, 0, 0, 0.4),
+    0 0 16px rgba(56, 189, 248, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .menu-grid button:active {
-  transform: scale(.98);
+  transform: scale(.97);
+  box-shadow: inset 0 0 12px rgba(56, 189, 248, 0.3);
+}
+}
+
+.menu-window :focus-visible { outline-color: #22d3ee; }
+
+.menu-grid button:focus-visible {
+  outline-offset: -3px;
 }
 
 .card-icon {
   display: grid;
   place-items: center;
-  width: 56px;
-  height: 56px;
-  border: 1px solid rgba(56, 189, 248, 0.25);
-  border-radius: 15px;
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.14) 0%, rgba(129, 140, 248, 0.08) 100%);
+  width: 64px;
+  height: 64px;
+  border: 1px solid #818cf84d;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #4f46e52e, #0e74902e);
   color: var(--cyan);
-  font-size: 28px;
+  font-size: 36px;
   line-height: 1;
-  transition: all 0.22s ease;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
-}
-
-.menu-grid button:hover .card-icon {
-  border-color: rgba(56, 189, 248, 0.65);
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.28) 0%, rgba(129, 140, 248, 0.18) 100%);
-  color: var(--cyan-bright);
-  transform: scale(1.06);
-  box-shadow: 0 0 14px rgba(56, 189, 248, 0.35);
 }
 
 .card-icon :is(img, svg) {
   display: block;
-  width: 30px;
-  height: 30px;
+  width: 38px;
+  height: 38px;
   object-fit: contain;
 }
 
 .card-label {
-  font-size: 13.5px;
+  font-size: 14px;
   font-weight: 650;
-  letter-spacing: .01em;
   line-height: 1.2;
   text-align: center;
   overflow-wrap: anywhere;
+  margin-top: 2px;
 }
 
 @media (max-height: 225px) {
