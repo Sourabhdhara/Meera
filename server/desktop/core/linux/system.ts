@@ -9,6 +9,81 @@ export class LinuxSystemEngine implements ISystemEngine {
   private currentVolume = 50;
   private isMuted = false;
 
+  public async launch(appName: string): Promise<{ ok: boolean; result?: string; error?: string }> {
+    const raw = appName.trim();
+    if (!raw) return { ok: false, error: "App name is required." };
+    try {
+      // 1. Try launching using standard desktop desktop-entry launcher
+      // 2. Fall back to spawning by binary name in background
+      await execAsync(`gtk-launch "${raw}" 2>/dev/null || nohup "${raw}" >/dev/null 2>&1 &`);
+      return { ok: true, result: `Successfully launched ${raw}.` };
+    } catch (err: any) {
+      return { ok: false, error: `Failed to launch ${raw}: ${err.message}` };
+    }
+  }
+
+  public async killProcess(appName: string): Promise<{ ok: boolean; result?: string; error?: string }> {
+    const raw = appName.trim();
+    if (!raw) return { ok: false, error: "App name is required." };
+    try {
+      await execAsync(`pkill -f -i "${raw}" || killall -i "${raw}"`);
+      return { ok: true, result: `Successfully closed ${raw}.` };
+    } catch (err: any) {
+      return { ok: false, error: `Could not close ${raw}: ${err.message}` };
+    }
+  }
+
+  public async findInstalledApp(query: string): Promise<{ found: boolean; count: number; matches: any[]; summary: string }> {
+    try {
+      const q = query.toLowerCase().trim();
+      const { stdout } = await execAsync(`which "${q}" 2>/dev/null || find /usr/share/applications -name "*${q}*.desktop" 2>/dev/null`);
+      const matches = stdout.split("\n").filter(Boolean);
+      const found = matches.length > 0;
+      return {
+        found,
+        count: matches.length,
+        matches,
+        summary: found ? `Found ${matches.length} matches for '${query}'.` : `No app found for '${query}'.`
+      };
+    } catch {
+      return { found: false, count: 0, matches: [], summary: `No app found for '${query}'.` };
+    }
+  }
+
+  public async listRunningApplications(filterQuery?: string): Promise<{ ok: boolean; applications: any[]; count: number }> {
+    try {
+      const { stdout } = await execAsync(`ps -eo pid,comm,%mem,%cpu --sort=-%mem | head -n 35`);
+      const lines = stdout.split("\n").slice(1).filter(Boolean);
+      let apps = lines.map(line => {
+        const parts = line.trim().split(/\s+/);
+        return {
+          Id: parseInt(parts[0], 10),
+          ProcessName: parts[1],
+          MemoryPercent: parts[2],
+          CpuPercent: parts[3]
+        };
+      });
+      if (filterQuery) {
+        const q = filterQuery.toLowerCase();
+        apps = apps.filter(a => (a.ProcessName || "").toLowerCase().includes(q));
+      }
+      return { ok: true, count: apps.length, applications: apps };
+    } catch {
+      return { ok: true, count: 0, applications: [] };
+    }
+  }
+
+  public async getProcessDetails(target: string): Promise<{ ok: boolean; result?: any; error?: string }> {
+    try {
+      const isPid = /^\d+$/.test(target.trim());
+      const cmd = isPid ? `ps -p ${target.trim()} -o pid,comm,%mem,%cpu,etime` : `pgrep -l -f "${target.trim()}"`;
+      const { stdout } = await execAsync(cmd);
+      return { ok: true, result: stdout.trim() };
+    } catch (err: any) {
+      return { ok: false, error: `Process '${target}' not found.` };
+    }
+  }
+
   public async getVolume(): Promise<{ ok: boolean; volume: number; muted: boolean }> {
     try {
       // Use pactl to read default sink volume percentage

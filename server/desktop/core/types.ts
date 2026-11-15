@@ -23,10 +23,15 @@ export interface IScriptEngine {
 }
 
 export interface ISystemEngine {
-  getVolume(): Promise<{ ok: boolean; volume: number; muted: boolean }>;
+  launch(appName: string): Promise<{ ok: boolean; result?: string; error?: string }> | { ok: boolean; result?: string; error?: string };
+  killProcess(appName: string): Promise<{ ok: boolean; result?: string; error?: string }>;
+  findInstalledApp(query: string): Promise<{ found: boolean; count: number; matches: any[]; summary: string }> | { found: boolean; count: number; matches: any[]; summary: string };
+  listRunningApplications(filterQuery?: string): Promise<{ ok: boolean; applications: any[]; count: number }>;
+  getProcessDetails(target: string): Promise<{ ok: boolean; result?: any; error?: string }>;
+  getVolume(): Promise<{ ok: boolean; volume: number; is_muted?: boolean; muted?: boolean; result?: string }>;
   setVolume(percent: number): Promise<{ ok: boolean; volume: number }>;
   adjustVolume(direction: "up" | "down", step?: number): Promise<{ ok: boolean; volume: number }>;
-  toggleMute(): Promise<{ ok: boolean; muted: boolean }>;
+  toggleMute(): Promise<{ ok: boolean; is_muted?: boolean; muted?: boolean }>;
   lockWorkstation(): Promise<{ ok: boolean; result: string }>;
   emptyRecycleBin(): Promise<{ ok: boolean; result: string }>;
   systemStatus(): Promise<{ ok: boolean; cpu: string; memory: string; battery: string; uptime: string; [key: string]: any }>;
