@@ -16,7 +16,7 @@ await esbuild.build({
   platform: "node",
   target: "node20",
   format: "cjs",
-  external: ["vite", "express", "ws", "@google/genai", "dotenv", "sql.js", "pdf-parse", "mammoth"],
+  external: ["vite", "express", "ws", "@google/genai", "dotenv", "sql.js", "pdf-parse", "mammoth", "tesseract.js"],
   banner: {
     js: "process.env.NODE_ENV = process.env.NODE_ENV || 'production';",
   },

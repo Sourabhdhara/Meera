@@ -6,6 +6,23 @@ import { promisify } from "util";
 import screenshot from "screenshot-desktop";
 import { IScreenEngine } from "../types";
 
+let tesseractWorkerPromise: Promise<any> | null = null;
+async function getTesseractWorker() {
+  if (!tesseractWorkerPromise) {
+    tesseractWorkerPromise = (async () => {
+      try {
+        const { createWorker } = require("tesseract.js");
+        const worker = await createWorker("eng");
+        return worker;
+      } catch (e) {
+        console.warn("[LinuxScreenEngine] Failed to initialize tesseract.js worker:", e);
+        return null;
+      }
+    })();
+  }
+  return tesseractWorkerPromise;
+}
+
 const execAsync = promisify(exec);
 
 export interface LinuxScreenWord {
@@ -76,11 +93,10 @@ export class LinuxScreenEngine implements IScreenEngine {
     }
 
     if (imgPath && fs.existsSync(imgPath)) {
+      // 1. Try Tesseract CLI if installed
       try {
-        // Run tesseract with TSV output to get bounding boxes of every word on screen!
         const { stdout } = await execAsync(`tesseract "${imgPath}" stdout --oem 1 -l eng tsv 2>/dev/null`);
         const lines = stdout.split("\n");
-        // TSV columns: level, page_num, par_num, block_num, line_num, word_num, left, top, width, height, conf, text
         for (let i = 1; i < lines.length; i++) {
           const parts = lines[i].split("\t");
           if (parts.length >= 12) {
@@ -106,6 +122,39 @@ export class LinuxScreenEngine implements IScreenEngine {
           }
         }
       } catch { }
+
+      // 2. If CLI failed or returned nothing, fall back to pure JS/WASM tesseract.js!
+      if (elements.length === 0) {
+        try {
+          const worker = await getTesseractWorker();
+          if (worker) {
+            const ret = await worker.recognize(imgPath);
+            const words = ret?.data?.words || [];
+            for (const w of words) {
+              const text = (w.text || "").trim();
+              const conf = w.confidence || 0;
+              const bbox = w.bbox || { x0: 0, y0: 0, x1: 0, y1: 0 };
+              const width = Math.max(0, bbox.x1 - bbox.x0);
+              const height = Math.max(0, bbox.y1 - bbox.y0);
+
+              if (text.length > 1 && conf > 30) {
+                const cx = Math.round(bbox.x0 + width / 2);
+                const cy = Math.round(bbox.y0 + height / 2);
+                elements.push({
+                  id: elements.length + 1,
+                  name: text,
+                  type: "Text",
+                  cx,
+                  cy,
+                  bounds: { x: bbox.x0, y: bbox.y0, width, height }
+                });
+              }
+            }
+          }
+        } catch (jsOcrErr) {
+          console.warn("[LinuxScreenEngine] tesseract.js fallback error:", jsOcrErr);
+        }
+      }
 
       // Cleanup temp screenshot
       if (!sourceImagePath && imgPath && fs.existsSync(imgPath)) {
@@ -151,13 +200,28 @@ export class LinuxScreenEngine implements IScreenEngine {
     if (!fs.existsSync(p)) return { ok: false, error: `Image not found: '${p}'` };
 
     try {
-      // Execute tesseract CLI if available on Linux
+      // 1. Try tesseract CLI if available on Linux
       const { stdout } = await execAsync(`tesseract "${p}" stdout --oem 1 -l eng 2>/dev/null`);
       const lines = stdout.split("\n").filter((l) => l.trim().length > 0);
-      return { ok: true, text: lines.join("\n"), count: lines.length };
-    } catch {
-      return { ok: false, error: "Tesseract OCR not installed or extraction failed." };
+      if (lines.length > 0) {
+        return { ok: true, text: lines.join("\n"), count: lines.length };
+      }
+    } catch { }
+
+    // 2. Fall back to tesseract.js
+    try {
+      const worker = await getTesseractWorker();
+      if (worker) {
+        const ret = await worker.recognize(p);
+        const text = ret?.data?.text || "";
+        const lines = text.split("\n").filter((l: string) => l.trim().length > 0);
+        return { ok: true, text: lines.join("\n"), count: lines.length };
+      }
+    } catch (e: any) {
+      return { ok: false, error: `OCR extraction failed: ${e.message}` };
     }
+
+    return { ok: false, error: "OCR extraction failed: no OCR engine available." };
   }
 
   public async findTextInImage(imagePath: string, targetText: string): Promise<{
