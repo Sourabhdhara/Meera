@@ -97,15 +97,27 @@ export class McpManager {
     const tokensDir = getMcpTokensDir();
     const serverEnv = { ...(config.environment || {}) };
 
-    // Standardize default token store path for any server that needs it
+    // Standardize default token store path for any server that needs it.
+    // Also inject generic environment variables (TOKEN_STORE_URI, AUTH_DIR, SESSION_DIR)
+    // so any community or official MCP server automatically stores persistent auth sessions
+    // inside the protected %APPDATA%\MEERA\mcp\tokens\ vault instead of the current working dir!
     const defaultTokenPath = path.join(tokensDir, `${config.id}-token-store`);
+    const defaultSessionDir = path.join(tokensDir, `${config.id}-session`);
+    try { fs.mkdirSync(defaultSessionDir, { recursive: true }); } catch {}
+
     if (serverEnv.TOKEN_STORE_URI) {
-      // Re-route relative or hardcoded token store URIs to the authoritative vault
-      if (serverEnv.TOKEN_STORE_URI.includes("token-store")) {
+      if (serverEnv.TOKEN_STORE_URI.includes("token-store") || serverEnv.TOKEN_STORE_URI.includes("tokens")) {
         serverEnv.TOKEN_STORE_URI = `file:///${defaultTokenPath.replace(/\\/g, "/")}`;
       }
-    } else if (config.id === "gmail" || config.id === "google-drive" || config.id === "spotify") {
+    } else {
       serverEnv.TOKEN_STORE_URI = `file:///${defaultTokenPath.replace(/\\/g, "/")}`;
+    }
+
+    // Auto-inject generic auth directory paths for servers using session directories
+    if (!serverEnv.AUTH_DIR && !serverEnv.SESSION_DIR && !serverEnv.TOKEN_DIR) {
+      serverEnv.AUTH_DIR = defaultSessionDir;
+      serverEnv.SESSION_DIR = defaultSessionDir;
+      serverEnv.TOKEN_DIR = defaultSessionDir;
     }
 
     // Extract credential keys (IDs, Secrets, API Keys, Tokens) to build an identity fingerprint
@@ -135,7 +147,11 @@ export class McpManager {
       if (fs.existsSync(defaultTokenPath)) {
         try { fs.rmSync(defaultTokenPath, { force: true, recursive: true }); } catch {}
       }
-      // 2. Delete any custom token path specified in TOKEN_STORE_URI
+      // 2. Delete standard session directory if present
+      if (fs.existsSync(defaultSessionDir)) {
+        try { fs.rmSync(defaultSessionDir, { force: true, recursive: true }); } catch {}
+      }
+      // 3. Delete any custom token path specified in TOKEN_STORE_URI
       if (serverEnv.TOKEN_STORE_URI && serverEnv.TOKEN_STORE_URI.startsWith("file:///")) {
         const customPath = serverEnv.TOKEN_STORE_URI.replace("file:///", "");
         if (fs.existsSync(customPath)) {
