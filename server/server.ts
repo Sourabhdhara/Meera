@@ -130,6 +130,23 @@ async function startServer() {
     await getDb();
     await dbRemoveObsoleteSettings();
     console.log("[Server] Database, secrets, and directives initialized on startup.");
+
+    // Trigger immediate desktop notification if database was restored or recreated
+    if (dbRecoveryState === "RESTORED_FROM_BACKUP") {
+      try {
+        const popupScript = path.join(process.env.MEERA_APP_ROOT || process.cwd(), "dist", "popup.ps1");
+        if (fs.existsSync(popupScript)) {
+          spawn("powershell.exe", ["-ExecutionPolicy", "Bypass", "-File", popupScript, "-Title", "MEERA Storage Alert", "-Message", "Database was restored from safe backup. Recent session notes synced."], { windowsHide: true });
+        }
+      } catch (_) {}
+    } else if (dbRecoveryState === "FRESH_DB_CREATED") {
+      try {
+        const popupScript = path.join(process.env.MEERA_APP_ROOT || process.cwd(), "dist", "popup.ps1");
+        if (fs.existsSync(popupScript)) {
+          spawn("powershell.exe", ["-ExecutionPolicy", "Bypass", "-File", popupScript, "-Title", "MEERA Storage Alert", "-Message", "Database was missing or corrupted. Fresh new database created."], { windowsHide: true });
+        }
+      } catch (_) {}
+    }
   } catch (err) {
     console.error("[Server] Failed to initialize database on startup:", err);
   }
