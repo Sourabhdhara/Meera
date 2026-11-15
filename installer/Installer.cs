@@ -263,9 +263,10 @@ namespace MeeraInstaller
 
                     ProcessStartInfo psi = new ProcessStartInfo();
                     psi.FileName = "powershell.exe";
-                    psi.Arguments = string.Format("-ExecutionPolicy Bypass -NoProfile -File \"{0}\"", scriptPath);
+                    psi.Arguments = string.Format("-ExecutionPolicy Bypass -NoProfile -ExecutionPolicy Unrestricted -Command \"& '{0}'\"", scriptPath.Replace("'", "''"));
                     psi.WorkingDirectory = Path.GetDirectoryName(scriptPath);
                     psi.UseShellExecute = false;
+                    psi.RedirectStandardError = true;
                     psi.CreateNoWindow = true;
 
                     Process proc = Process.Start(psi);
@@ -281,6 +282,7 @@ namespace MeeraInstaller
                         Thread.Sleep(800);
                     }
 
+                    string err = proc.StandardError.ReadToEnd();
                     proc.WaitForExit();
 
                     if (proc.ExitCode == 0)
@@ -295,7 +297,9 @@ namespace MeeraInstaller
                     }
                     else
                     {
-                        SetProgress("Setup finished with exit code: " + proc.ExitCode, 100);
+                        string msg = !string.IsNullOrEmpty(err) ? err.Trim() : ("Exit code: " + proc.ExitCode);
+                        if (msg.Length > 80) msg = msg.Substring(0, 80) + "...";
+                        SetProgress("Error: " + msg, 100);
                     }
                 }
                 catch (Exception ex)
