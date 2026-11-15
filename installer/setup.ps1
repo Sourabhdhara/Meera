@@ -76,7 +76,10 @@ try {
     }
 } catch {
     Write-Host "[!] Note: Remote release asset not yet published; deploying from local workspace staging..." -ForegroundColor Yellow
-    $LocalZip = "release-dist\meera-core.zip"
+    $LocalZip = Join-Path $PSScriptRoot "..\release-dist\meera-core.zip"
+    if (-not (Test-Path $LocalZip)) { $LocalZip = "release-dist\meera-core.zip" }
+    if (-not (Test-Path $LocalZip)) { $LocalZip = Join-Path $PSScriptRoot "meera-core.zip" }
+
     if (Test-Path $LocalZip) {
         Copy-Item -Path $LocalZip -Destination $TempZip -Force
     } else {
