@@ -156,7 +156,10 @@ export class SystemEngine {
 
   public runPowerShell(script: string, timeoutMs: number = 10000): Promise<{ ok: boolean; stdout: string; stderr: string; returncode: number }> {
     return new Promise((resolve) => {
-      const encoded = Buffer.from(script, "utf16le").toString("base64");
+      // Lower process priority of background child PowerShell processes to 'BelowNormal' or 'Idle'
+      // so desktop checks NEVER steal CPU threads from audio streaming / WebSocket processing!
+      const priScript = `[System.Diagnostics.Process]::GetCurrentProcess().PriorityClass = 'BelowNormal';\n` + script;
+      const encoded = Buffer.from(priScript, "utf16le").toString("base64");
       const child = spawn("powershell.exe", [
         "-NoProfile",
         "-NonInteractive",

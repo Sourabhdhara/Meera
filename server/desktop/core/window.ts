@@ -273,7 +273,7 @@ public class WinDesktopManager {
 export class WindowEngine {
   private runPowerShell(script: string, timeoutMs: number = 6000): Promise<{ ok: boolean; stdout: string; stderr: string }> {
     return new Promise((resolve) => {
-      const cleanScript = `$ProgressPreference = 'SilentlyContinue';\r\n` + script;
+      const cleanScript = `[System.Diagnostics.Process]::GetCurrentProcess().PriorityClass = 'BelowNormal';\r\n$ProgressPreference = 'SilentlyContinue';\r\n` + script;
       const encoded = Buffer.from(cleanScript, "utf16le").toString("base64");
       const child = spawn("powershell.exe", [
         "-NoProfile",
