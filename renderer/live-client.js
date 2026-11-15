@@ -321,10 +321,13 @@ class MeeraLiveClient {
       source.connect(this.outputGainNode);
 
       const currentTime = this.outputAudioCtx.currentTime;
-      // Keep a small safety margin for network jitter without making the first
-      // syllable noticeably late.
+      // Audio Jitter & Underrun Protection:
+      // Gemini sends 24kHz PCM chunks over WebSocket. If network jitter or thread latency occurs,
+      // a rigid 60ms gap causes stuttering ("cut-cut ke aana").
+      // We schedule seamlessly: if buffer was empty/lagging, give a smooth 120ms pre-buffer headroom.
+      // If previous chunk is still queued smoothly, append back-to-back without gap!
       if (this.nextStartTime < currentTime) {
-        this.nextStartTime = currentTime + 0.06;
+        this.nextStartTime = currentTime + 0.12;
       }
       source.start(this.nextStartTime);
       this.nextStartTime += buffer.duration;
@@ -333,14 +336,14 @@ class MeeraLiveClient {
         const index = this.activeSources.indexOf(source);
         if (index > -1) this.activeSources.splice(index, 1);
         if (this.activeSources.length === 0 && this.currentState === 'speaking') {
-          // Add a short grace period before returning to 'listening'
-          // in case the next audio chunk from network is in-flight.
+          // Increase grace period from 100ms to 250ms so mid-sentence network pauses
+          // don't prematurely kill the audio pipeline and cause choppy gaps!
           setTimeout(() => {
             if (this.activeSources.length === 0 && this.currentState === 'speaking') {
               this.setState('listening');
               this.nextStartTime = 0;
             }
-          }, 100);
+          }, 250);
         }
       };
 
