@@ -1151,9 +1151,8 @@ async function startServer() {
               try {
                 hasGreetedThisSession = true;
                 const latestEpisode = await dbGetLatestEpisode();
-                let recoveryNote = "";
+                // Desktop toast alert only (voice prompt remains clean & natural)
                 if (dbRecoveryState === "RESTORED_FROM_BACKUP") {
-                  recoveryNote = " NOTE: meera.db was corrupted or missing and was successfully restored from backup. Inform the user gracefully and naturally that their data was safely restored from backup, but a couple of very recent turns right before the previous session abruptly stopped might need a quick reminder.";
                   try {
                     const popupScript = path.join(process.env.MEERA_APP_ROOT || process.cwd(), "dist", "popup.ps1");
                     if (fs.existsSync(popupScript)) {
@@ -1161,7 +1160,6 @@ async function startServer() {
                     }
                   } catch (_) {}
                 } else if (dbRecoveryState === "FRESH_DB_CREATED") {
-                  recoveryNote = " NOTE: The database was missing or corrupted, so a fresh new database has been created. Inform the user warmly and gracefully that a fresh memory baseline has been initialized.";
                   try {
                     const popupScript = path.join(process.env.MEERA_APP_ROOT || process.cwd(), "dist", "popup.ps1");
                     if (fs.existsSync(popupScript)) {
@@ -1170,7 +1168,7 @@ async function startServer() {
                   } catch (_) {}
                 }
 
-                const prompt = `[System Event - Jarvis Startup Briefing]: The user has just launched MEERA.${recoveryNote} Greet the user warmly in your natural companion voice. Check if you have unread messages on WhatsApp (via mcp_whatsapp_whatsapp_get_unread_messages) or new unread emails (via mcp_gmail_message_search with 'is:unread label:INBOX'). Brief them smoothly like Jarvis with any new incoming messages or updates, or simply ask how you can help if there are none. Remember: NEVER volunteer or announce the current time unless asked.`;
+                const prompt = `[System Event - Jarvis Startup Briefing]: The user has just launched MEERA. Greet the user warmly in your natural companion voice. Check if you have unread messages on WhatsApp (via mcp_whatsapp_whatsapp_get_unread_messages) or new unread emails (via mcp_gmail_message_search with 'is:unread label:INBOX'). Brief them smoothly like Jarvis with any new incoming messages or updates, or simply ask how you can help if there are none. Remember: NEVER volunteer or announce the current time unless asked.`;
 
                 console.log("[Proactive Initiative] Triggering warm Jarvis startup briefing...");
                 clientWs.send(JSON.stringify({
