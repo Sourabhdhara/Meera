@@ -989,8 +989,15 @@ async function startServer() {
                     } else if (fc.name === "mcp_open_config") {
                       try {
                         const configPath = path.join(process.env.MEERA_APP_ROOT || process.cwd(), "config", "mcp-servers.json");
-                        if (!fs.existsSync(configPath)) throw new Error(`MCP config not found: ${configPath}`);
-                        const child = spawn("notepad.exe", [configPath], { detached: true, stdio: "ignore", windowsHide: false });
+                        if (!fs.existsSync(configPath)) {
+                          // Auto-create default config template if missing
+                          const configDir = path.dirname(configPath);
+                          if (!fs.existsSync(configDir)) fs.mkdirSync(configDir, { recursive: true });
+                          fs.writeFileSync(configPath, JSON.stringify({ servers: [] }, null, 2), "utf8");
+                        }
+                        const isWin = process.platform === "win32";
+                        const opener = isWin ? "notepad.exe" : "xdg-open";
+                        const child = spawn(opener, [configPath], { detached: true, stdio: "ignore", windowsHide: false });
                         child.unref();
                         session.sendToolResponse({ functionResponses: [{ name: fc.name, response: { output: { opened: true, path: configPath } }, id: fc.id }] });
                       } catch (err: any) {
@@ -1010,7 +1017,11 @@ async function startServer() {
                           if (authUrlMatch) {
                             const authUrl = authUrlMatch[0];
                             console.log(`[MCP Auth Interceptor] Detected OAuth URL: ${authUrl}. Opening browser...`);
-                            spawn("cmd.exe", ["/c", "start", "", authUrl], { detached: true, stdio: "ignore" }).unref();
+                            if (process.platform === "win32") {
+                              spawn("cmd.exe", ["/c", "start", "", authUrl], { detached: true, stdio: "ignore" }).unref();
+                            } else {
+                              spawn("xdg-open", [authUrl], { detached: true, stdio: "ignore" }).unref();
+                            }
                             clientWs.send(JSON.stringify({
                               type: "notification",
                               title: "MEERA Authentication Required",
