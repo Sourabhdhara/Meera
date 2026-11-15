@@ -173,7 +173,7 @@ export class McpManager {
     this.reload();
     const config = this.configs.find((item) => item.id === id);
     if (!config) throw new Error(`MCP server '${id}' is not configured.`);
-    if (config.enabled === false) return { running: false, disabled: true, message: `MCP server '${id}' is disabled in config/mcp-servers.json.` };
+    if (config.enabled === false) return { running: false, disabled: true, message: `MCP server '${id}' is disabled in mcp-servers.json.` };
     this.manuallyStopped.delete(id);
     if (this.processes.has(id)) return { running: true };
     const tools = await this.connect(config);
