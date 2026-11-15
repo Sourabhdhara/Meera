@@ -30,7 +30,8 @@ import {
   flushToDiskSync,
   dbInsertUserTranscript,
   dbInsertMeeraTranscript,
-  dbGetRecentDialogueTurns
+  dbGetRecentDialogueTurns,
+  dbRecoveryState
 } from "./server_db";
 import { Memory } from "./src/lib/memoryTypes";
 import {
@@ -1150,7 +1151,14 @@ async function startServer() {
               try {
                 hasGreetedThisSession = true;
                 const latestEpisode = await dbGetLatestEpisode();
-                const prompt = `[System Event - Jarvis Startup Briefing]: The user has just launched MEERA. Greet Sourabh warmly as his AI companion. Check if you have unread messages on WhatsApp (via mcp_whatsapp_whatsapp_get_unread_messages) or new unread emails (via mcp_gmail_message_search with 'is:unread label:INBOX'). Brief him smoothly like Jarvis with any new incoming messages or updates, or simply ask how you can help if there are none. Remember: NEVER volunteer or announce the current time unless asked.`;
+                let recoveryNote = "";
+                if (dbRecoveryState === "RESTORED_FROM_BACKUP") {
+                  recoveryNote = " NOTE: A previous session abruptly ended; your memory was recovered from backup so the last few turns might be missing. If relevant, gently let the user know you are ready but might need a reminder if anything was said right before the previous shutdown.";
+                } else if (dbRecoveryState === "CORRUPTED_FRESH_START") {
+                  recoveryNote = " NOTE: A critical storage error corrupted the previous memory file, so you are starting with a fresh memory baseline. Be natural, transparent, and polite about this fresh start.";
+                }
+
+                const prompt = `[System Event - Jarvis Startup Briefing]: The user has just launched MEERA.${recoveryNote} Greet the user warmly in your natural companion voice. Check if you have unread messages on WhatsApp (via mcp_whatsapp_whatsapp_get_unread_messages) or new unread emails (via mcp_gmail_message_search with 'is:unread label:INBOX'). Brief them smoothly like Jarvis with any new incoming messages or updates, or simply ask how you can help if there are none. Remember: NEVER volunteer or announce the current time unless asked.`;
 
                 console.log("[Proactive Initiative] Triggering warm Jarvis startup briefing...");
                 clientWs.send(JSON.stringify({

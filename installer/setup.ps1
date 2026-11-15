@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     MEERA AI Companion — Ultra-Light 2MB Web Bootstrapper & Installer
     Installs MEERA securely into C:\ProgramData\MEERA\ and configures Desktop Shortcut.
