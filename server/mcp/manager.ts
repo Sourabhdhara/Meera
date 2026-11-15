@@ -255,10 +255,8 @@ export class McpManager {
     if (original === "whatsapp_status" || original === "whatsapp_link_status") {
       const waDir = getWhatsAppDir();
       const statusPath = path.join(waDir, ".mcp-status.json");
-      const legacyPath = path.join(this.root, "WhatsApp_MCP_New", ".mcp-status.json");
-      const activePath = fs.existsSync(statusPath) ? statusPath : legacyPath;
       try {
-        const status = JSON.parse(fs.readFileSync(activePath, "utf8"));
+        const status = JSON.parse(fs.readFileSync(statusPath, "utf8"));
         // Validate PID if reported: if process died, the true state is 'stopped'
         if (status.pid && status.state !== "stopped" && status.state !== "unlinked") {
           try {

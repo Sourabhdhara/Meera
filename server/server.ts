@@ -179,11 +179,8 @@ async function startServer() {
 
   app.get("/api/mcp/whatsapp/status", async (_req, res) => {
     try {
-      const waDir = getWhatsAppDir();
-      const statusPath = path.join(waDir, ".mcp-status.json");
-      const legacyPath = path.join(process.env.MEERA_APP_ROOT || process.cwd(), "WhatsApp_MCP_New", ".mcp-status.json");
-      const activeStatusPath = fs.existsSync(statusPath) ? statusPath : legacyPath;
-      const status = fs.existsSync(activeStatusPath) ? JSON.parse(fs.readFileSync(activeStatusPath, "utf8")) : { state: "stopped", qr_required: false, qr: "" };
+      const statusPath = path.join(getWhatsAppDir(), ".mcp-status.json");
+      const status = fs.existsSync(statusPath) ? JSON.parse(fs.readFileSync(statusPath, "utf8")) : { state: "stopped", qr_required: false, qr: "" };
       if (status.pid && status.pid !== process.pid) {
         try { process.kill(Number(status.pid), 0); } catch { status.state = "stopped"; status.qr_required = false; status.qr = ""; }
       }
@@ -211,14 +208,10 @@ async function startServer() {
       await mcpManager.stop("whatsapp");
       const waDir = getWhatsAppDir();
       const authPath = path.join(waDir, "session");
-      const legacyAuthPath = path.join(process.env.MEERA_APP_ROOT || process.cwd(), "WhatsApp_MCP_New", ".wwebjs_auth");
       await fs.promises.rm(authPath, { recursive: true, force: true }).catch(() => {});
-      await fs.promises.rm(legacyAuthPath, { recursive: true, force: true }).catch(() => {});
       const statusPath = path.join(waDir, ".mcp-status.json");
-      const legacyStatusPath = path.join(process.env.MEERA_APP_ROOT || process.cwd(), "WhatsApp_MCP_New", ".mcp-status.json");
       const unlinkedPayload = JSON.stringify({ state: "unlinked", qr_required: true, updated_at: new Date().toISOString() }, null, 2);
       try { await fs.promises.writeFile(statusPath, unlinkedPayload, "utf8"); } catch {}
-      try { await fs.promises.writeFile(legacyStatusPath, unlinkedPayload, "utf8"); } catch {}
       res.json({ ok: true, state: "unlinked", message: "WhatsApp session removed. Start the server to generate a new QR code." });
     } catch (error: any) { res.status(500).json({ error: error.message }); }
   });
@@ -230,10 +223,8 @@ async function startServer() {
       const output = await mcpManager.stop("whatsapp");
       const waDir = getWhatsAppDir();
       const statusPath = path.join(waDir, ".mcp-status.json");
-      const legacyStatusPath = path.join(process.env.MEERA_APP_ROOT || process.cwd(), "WhatsApp_MCP_New", ".mcp-status.json");
       const stoppedPayload = JSON.stringify({ state: "stopped", qr_required: false, qr: "", updated_at: new Date().toISOString() }, null, 2);
       try { await fs.promises.writeFile(statusPath, stoppedPayload, "utf8"); } catch {}
-      try { await fs.promises.writeFile(legacyStatusPath, stoppedPayload, "utf8"); } catch {}
       res.json(output);
     } catch (error: any) { res.status(500).json({ error: error.message }); }
   });
