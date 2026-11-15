@@ -100,7 +100,7 @@ function registerMcpTools(rawTools: any[]): void {
   if (!dynamicMcpTools.some((t: any) => t.name === "mcp_open_config")) {
     dynamicMcpTools.push({
       name: "mcp_open_config",
-      description: "Open the exact MEERA MCP configuration file config/mcp-servers.json in Notepad.",
+      description: "Opens the authoritative MEERA MCP configuration file (mcp-servers.json) located in %APPDATA%\\MEERA\\mcp\\config in Notepad.",
       inputSchema: { type: Type.OBJECT, properties: {} }
     });
   }
