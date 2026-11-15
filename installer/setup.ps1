@@ -113,9 +113,31 @@ $WshShell = New-Object -ComObject WScript.Shell
 $DesktopPath = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::Desktop)
 $ShortcutPath = Join-Path $DesktopPath "MEERA.lnk"
 
+# Find best available electron executable
+$LocalElectron = Join-Path $PSScriptRoot "..\node_modules\electron\dist\electron.exe"
+if (-not (Test-Path $LocalElectron)) { $LocalElectron = "node_modules\electron\dist\electron.exe" }
+$GlobalElectron = (Get-Command electron.cmd -ErrorAction SilentlyContinue).Source
+
+$TargetExe = "npx.cmd"
+$TargetArgs = "electron electron\main.cjs"
+
+if (Test-Path $LocalElectron) {
+    # Copy pre-installed electron runtime into vault so it never redownloads
+    $VaultElectron = Join-Path $CoreDir "electron\electron.exe"
+    if (-not (Test-Path (Split-Path $VaultElectron))) {
+        New-Item -Path (Split-Path $VaultElectron) -ItemType Directory -Force | Out-Null
+        Copy-Item -Path (Split-Path $LocalElectron)\* -Destination (Split-Path $VaultElectron) -Recurse -Force
+    }
+    $TargetExe = $VaultElectron
+    $TargetArgs = "electron\main.cjs"
+} elseif ($GlobalElectron) {
+    $TargetExe = $GlobalElectron
+    $TargetArgs = "electron\main.cjs"
+}
+
 $Shortcut = $WshShell.CreateShortcut($ShortcutPath)
-$Shortcut.TargetPath = "npx.cmd"
-$Shortcut.Arguments = "electron electron\main.cjs"
+$Shortcut.TargetPath = $TargetExe
+$Shortcut.Arguments = $TargetArgs
 $Shortcut.WorkingDirectory = $CoreDir
 $Shortcut.Description = "MEERA AI Desktop Companion"
 $Shortcut.IconLocation = "$CoreDir\assets\icon.ico"
@@ -131,5 +153,5 @@ Write-Host "[✓] Shortcuts created!" -ForegroundColor Green
 Write-Host "Launching MEERA now..." -ForegroundColor Cyan
 
 # 6. Launch MEERA
-Start-Process "npx.cmd" -ArgumentList "electron electron\main.cjs" -WorkingDirectory $CoreDir
+Start-Process $TargetExe -ArgumentList $TargetArgs -WorkingDirectory $CoreDir
 exit 0
