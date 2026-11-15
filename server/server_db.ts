@@ -4,7 +4,7 @@ import path from "path";
 import { dataFile } from "./server_paths";
 import { Memory, MemoryCategory, MemoryEpisode } from "./src/lib/memoryTypes";
 
-export type DbRecoveryState = "NORMAL" | "RESTORED_FROM_BACKUP" | "CORRUPTED_FRESH_START" | "FIRST_INSTALL";
+export type DbRecoveryState = "NORMAL" | "RESTORED_FROM_BACKUP" | "FRESH_DB_CREATED";
 export let dbRecoveryState: DbRecoveryState = "NORMAL";
 
 function getDbPath(): string {
@@ -120,13 +120,12 @@ export async function getDb(): Promise<Database> {
       dbRecoveryState = "RESTORED_FROM_BACKUP";
       console.warn(`[SQLite] Restored corrupted database from ${backupPath}`);
     } else {
-      const isFirstInstall = !fs.existsSync(dbPath) && !fs.existsSync(backupPath);
-      // Both copies are unusable or it's a first installation. Start clean; schema/default directives below
-      // will recreate the same baseline.
+      // Live DB and backup are missing or unusable (both corrupt or fresh setup).
+      // Start clean; unified notification triggers: "Database is missing or corrupted. Fresh new database created."
       try { if (fs.existsSync(dbPath)) fs.unlinkSync(dbPath); } catch {}
       try { if (fs.existsSync(backupPath)) fs.unlinkSync(backupPath); } catch {}
-      dbRecoveryState = isFirstInstall ? "FIRST_INSTALL" : "CORRUPTED_FRESH_START";
-      console.warn(isFirstInstall ? "[SQLite] First installation: initialized clean database." : "[SQLite] Live database and backup were corrupt; recreated clean database.");
+      dbRecoveryState = "FRESH_DB_CREATED";
+      console.warn("[SQLite] Database is missing or corrupted. Fresh new database initialized.");
       db = new SQL.Database();
     }
 

@@ -1153,11 +1153,21 @@ async function startServer() {
                 const latestEpisode = await dbGetLatestEpisode();
                 let recoveryNote = "";
                 if (dbRecoveryState === "RESTORED_FROM_BACKUP") {
-                  recoveryNote = " NOTE: meera.db was corrupted or missing and was restored from backup. Inform the user gracefully and naturally that their data was safely restored from backup, but a couple of very recent turns right before the previous session abruptly stopped might need a quick reminder.";
-                } else if (dbRecoveryState === "CORRUPTED_FRESH_START") {
-                  recoveryNote = " NOTE: Both meera.db and the backup were corrupted, so a fresh new database had to be created. Inform the user honestly, warmly, and gracefully that due to storage corruption their previous memory could not be preserved and you are starting with a fresh slate.";
-                } else if (dbRecoveryState === "FIRST_INSTALL") {
-                  recoveryNote = " NOTE: Both database files were not found because this is a brand new fresh installation. Give a warm, welcoming introduction as their personal AI companion.";
+                  recoveryNote = " NOTE: meera.db was corrupted or missing and was successfully restored from backup. Inform the user gracefully and naturally that their data was safely restored from backup, but a couple of very recent turns right before the previous session abruptly stopped might need a quick reminder.";
+                  try {
+                    const popupScript = path.join(process.env.MEERA_APP_ROOT || process.cwd(), "dist", "popup.ps1");
+                    if (fs.existsSync(popupScript)) {
+                      spawn("powershell.exe", ["-ExecutionPolicy", "Bypass", "-File", popupScript, "-Title", "MEERA Storage Alert", "-Message", "Database was restored from safe backup. Recent session notes synced."], { windowsHide: true });
+                    }
+                  } catch (_) {}
+                } else if (dbRecoveryState === "FRESH_DB_CREATED") {
+                  recoveryNote = " NOTE: The database was missing or corrupted, so a fresh new database has been created. Inform the user warmly and gracefully that a fresh memory baseline has been initialized.";
+                  try {
+                    const popupScript = path.join(process.env.MEERA_APP_ROOT || process.cwd(), "dist", "popup.ps1");
+                    if (fs.existsSync(popupScript)) {
+                      spawn("powershell.exe", ["-ExecutionPolicy", "Bypass", "-File", popupScript, "-Title", "MEERA Storage Alert", "-Message", "Database was missing or corrupted. Fresh new database created."], { windowsHide: true });
+                    }
+                  } catch (_) {}
                 }
 
                 const prompt = `[System Event - Jarvis Startup Briefing]: The user has just launched MEERA.${recoveryNote} Greet the user warmly in your natural companion voice. Check if you have unread messages on WhatsApp (via mcp_whatsapp_whatsapp_get_unread_messages) or new unread emails (via mcp_gmail_message_search with 'is:unread label:INBOX'). Brief them smoothly like Jarvis with any new incoming messages or updates, or simply ask how you can help if there are none. Remember: NEVER volunteer or announce the current time unless asked.`;
