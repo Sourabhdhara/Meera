@@ -53,11 +53,17 @@ function getStartupPosition(width = COMPANION_WIDTH, height = COMPANION_HEIGHT) 
 
 function positionOnTaskbar() {
   if (!win || win.isDestroyed()) return;
-  win.setAlwaysOnTop(true, 'screen-saver');
+  if (process.platform === 'win32') {
+    win.setAlwaysOnTop(true, 'screen-saver');
+    win.showInactive();
+  } else {
+    // Linux window managers (Muffin/X11) require normal always-on-top level
+    // and standard win.show() to properly initialize X11 input events
+    win.setAlwaysOnTop(true);
+    win.show();
+  }
   win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   win.setBounds({ x: REFERENCE.x, y: REFERENCE.y, width: COMPANION_WIDTH, height: COMPANION_HEIGHT });
-  win.setAlwaysOnTop(true, 'screen-saver');
-  win.showInactive();
 }
 
 // --- Backend Process Management --------------------------------------------
@@ -154,7 +160,7 @@ function createWindow() {
     resizable: false,
     show: false,
     alwaysOnTop: true,
-    skipTaskbar: true,
+    skipTaskbar: process.platform === 'win32',
     hasShadow: false,
     backgroundColor: '#00000000',
     webPreferences: {
@@ -165,7 +171,11 @@ function createWindow() {
     },
   });
 
-  win.setAlwaysOnTop(true, 'screen-saver');
+  if (process.platform === 'win32') {
+    win.setAlwaysOnTop(true, 'screen-saver');
+  } else {
+    win.setAlwaysOnTop(true);
+  }
 
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
@@ -561,7 +571,7 @@ ipcMain.on('meera:drag-move', (_event, point) => {
   if (win && dragOrigin) {
     const newX = Math.round(dragOrigin.windowX + point.x - dragOrigin.x);
     const newY = Math.round(dragOrigin.windowY + point.y - dragOrigin.y);
-    win.setPosition(newX, newY);
+    win.setBounds({ x: newX, y: newY, width: COMPANION_WIDTH, height: COMPANION_HEIGHT });
   }
 });
 
