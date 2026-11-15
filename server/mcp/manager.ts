@@ -98,20 +98,23 @@ export class McpManager {
     const serverEnv = { ...(config.environment || {}) };
 
     // Standardize default token store path for any server that needs it.
-    // Also inject generic environment variables (TOKEN_STORE_URI, AUTH_DIR, SESSION_DIR)
-    // so any community or official MCP server automatically stores persistent auth sessions
-    // inside the protected %APPDATA%\MEERA\mcp\tokens\ vault instead of the current working dir!
-    const defaultTokenPath = path.join(tokensDir, `${config.id}-token-store`);
+    // Preserves exact filename (e.g. gmail-token-store, drive-token-store) if defined in config,
+    // otherwise defaults to ${config.id}-token-store inside %APPDATA%\MEERA\mcp\tokens\
+    let tokenFileName = `${config.id}-token-store`;
+    if (serverEnv.TOKEN_STORE_URI) {
+      const match = serverEnv.TOKEN_STORE_URI.match(/([a-zA-Z0-9_\-]+-token-store)/);
+      if (match) {
+        tokenFileName = match[1];
+      }
+    } else if (config.id === "google-drive") {
+      tokenFileName = "drive-token-store";
+    }
+
+    const defaultTokenPath = path.join(tokensDir, tokenFileName);
     const defaultSessionDir = path.join(tokensDir, `${config.id}-session`);
     try { fs.mkdirSync(defaultSessionDir, { recursive: true }); } catch {}
 
-    if (serverEnv.TOKEN_STORE_URI) {
-      if (serverEnv.TOKEN_STORE_URI.includes("token-store") || serverEnv.TOKEN_STORE_URI.includes("tokens")) {
-        serverEnv.TOKEN_STORE_URI = `file:///${defaultTokenPath.replace(/\\/g, "/")}`;
-      }
-    } else {
-      serverEnv.TOKEN_STORE_URI = `file:///${defaultTokenPath.replace(/\\/g, "/")}`;
-    }
+    serverEnv.TOKEN_STORE_URI = `file:///${defaultTokenPath.replace(/\\/g, "/")}`;
 
     // Auto-inject generic auth directory paths for servers using session directories
     if (!serverEnv.AUTH_DIR && !serverEnv.SESSION_DIR && !serverEnv.TOKEN_DIR) {
