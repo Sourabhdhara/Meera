@@ -263,7 +263,7 @@ namespace MeeraInstaller
 
                     ProcessStartInfo psi = new ProcessStartInfo();
                     psi.FileName = "powershell.exe";
-                    psi.Arguments = string.Format("-ExecutionPolicy Bypass -NoProfile -ExecutionPolicy Unrestricted -Command \"& '{0}'\"", scriptPath.Replace("'", "''"));
+                    psi.Arguments = string.Format("-ExecutionPolicy Bypass -NoProfile -File \"{0}\"", scriptPath);
                     psi.WorkingDirectory = Path.GetDirectoryName(scriptPath);
                     psi.UseShellExecute = false;
                     psi.RedirectStandardError = true;
