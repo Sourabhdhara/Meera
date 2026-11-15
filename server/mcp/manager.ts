@@ -97,20 +97,29 @@ export class McpManager {
     const tokensDir = getMcpTokensDir();
     const serverEnv = { ...(config.environment || {}) };
 
-    // Standardize default token store path for any server that needs it.
-    // Preserves exact filename (e.g. gmail-token-store, drive-token-store) if defined in config,
-    // otherwise defaults to ${config.id}-token-store inside %APPDATA%\MEERA\mcp\tokens\
-    let tokenFileName = `${config.id}-token-store`;
+    // Safe Multi-Account Credential Vault:
+    // We isolate tokens per unique client identity using a short credential hash suffix.
+    // If the user temporarily switches keys, tests another ID, or reverts back to their original key,
+    // their previous verified tokens are NEVER prematurely destroyed!
+    // Stale/old tokens are ONLY replaced when a new login actually succeeds and writes new tokens.
+    const credentialEntries = Object.entries(serverEnv)
+      .filter(([k]) => !["TOKEN_STORE_URI", "MEERA_WHATSAPP_DIR", "ELECTRON_RUN_AS_NODE", "AUTH_DIR", "SESSION_DIR", "TOKEN_DIR"].includes(k))
+      .sort(([a], [b]) => a.localeCompare(b));
+
+    const hasRealCredentials = credentialEntries.some(([, v]) => 
+      v && typeof v === "string" && !v.includes("YOUR_") && !v.includes("HERE") && v.trim().length > 0
+    );
+
+    // Standard base token file name (e.g. gmail-token-store, drive-token-store)
+    let baseTokenName = `${config.id}-token-store`;
     if (serverEnv.TOKEN_STORE_URI) {
       const match = serverEnv.TOKEN_STORE_URI.match(/([a-zA-Z0-9_\-]+-token-store)/);
-      if (match) {
-        tokenFileName = match[1];
-      }
+      if (match) baseTokenName = match[1];
     } else if (config.id === "google-drive") {
-      tokenFileName = "drive-token-store";
+      baseTokenName = "drive-token-store";
     }
 
-    const defaultTokenPath = path.join(tokensDir, tokenFileName);
+    const defaultTokenPath = path.join(tokensDir, baseTokenName);
     const defaultSessionDir = path.join(tokensDir, `${config.id}-session`);
     try { fs.mkdirSync(defaultSessionDir, { recursive: true }); } catch {}
 
@@ -121,52 +130,6 @@ export class McpManager {
       serverEnv.AUTH_DIR = defaultSessionDir;
       serverEnv.SESSION_DIR = defaultSessionDir;
       serverEnv.TOKEN_DIR = defaultSessionDir;
-    }
-
-    // Extract credential keys (IDs, Secrets, API Keys, Tokens) to build an identity fingerprint
-    const credentialEntries = Object.entries(serverEnv)
-      .filter(([k]) => !["TOKEN_STORE_URI", "MEERA_WHATSAPP_DIR", "ELECTRON_RUN_AS_NODE"].includes(k))
-      .sort(([a], [b]) => a.localeCompare(b));
-
-    const credentialFingerprint = crypto.createHash("sha256")
-      .update(JSON.stringify(credentialEntries))
-      .digest("hex");
-
-    const metaFilePath = path.join(tokensDir, `.${config.id}-auth-fingerprint.json`);
-    let prevFingerprint = "";
-    try {
-      if (fs.existsSync(metaFilePath)) {
-        prevFingerprint = JSON.parse(fs.readFileSync(metaFilePath, "utf8")).fingerprint || "";
-      }
-    } catch {}
-
-    const hasRealCredentials = credentialEntries.some(([, v]) => 
-      v && typeof v === "string" && !v.includes("YOUR_") && !v.includes("HERE") && v.trim().length > 0
-    );
-
-    if (hasRealCredentials && prevFingerprint && prevFingerprint !== credentialFingerprint) {
-      console.log(`[MCP ${config.id}] Detected changed credentials for ${config.id}. Auto-purging stale tokens...`);
-      // 1. Delete standard token store file if present
-      if (fs.existsSync(defaultTokenPath)) {
-        try { fs.rmSync(defaultTokenPath, { force: true, recursive: true }); } catch {}
-      }
-      // 2. Delete standard session directory if present
-      if (fs.existsSync(defaultSessionDir)) {
-        try { fs.rmSync(defaultSessionDir, { force: true, recursive: true }); } catch {}
-      }
-      // 3. Delete any custom token path specified in TOKEN_STORE_URI
-      if (serverEnv.TOKEN_STORE_URI && serverEnv.TOKEN_STORE_URI.startsWith("file:///")) {
-        const customPath = serverEnv.TOKEN_STORE_URI.replace("file:///", "");
-        if (fs.existsSync(customPath)) {
-          try { fs.rmSync(customPath, { force: true, recursive: true }); } catch {}
-        }
-      }
-    }
-
-    if (hasRealCredentials) {
-      try {
-        fs.writeFileSync(metaFilePath, JSON.stringify({ fingerprint: credentialFingerprint, updated_at: new Date().toISOString() }, null, 2), "utf8");
-      } catch {}
     }
 
     const env = Object.fromEntries(Object.entries({ 
