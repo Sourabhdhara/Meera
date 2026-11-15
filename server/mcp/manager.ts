@@ -3,7 +3,7 @@ import fs from "fs";
 import { spawn, ChildProcessWithoutNullStreams } from "child_process";
 import crossSpawn from "cross-spawn";
 import readline from "readline";
-import { getMcpConfigPath } from "../server_paths";
+import { getMcpConfigPath, getMcpCachePath, getWhatsAppDir } from "../server_paths";
 
 type ServerConfig = { id: string; name?: string; enabled?: boolean; transport: "stdio" | "http" | "sse"; command?: string; args?: string[]; workingDirectory?: string; environment?: Record<string, string>; url?: string };
 type Pending = { resolve: (v: any) => void; reject: (e: Error) => void };
@@ -24,7 +24,7 @@ export class McpManager {
 
   private loadCachedMappings() {
     try {
-      const cachedPath = path.join(this.root, "config", "cached-mcp-tools.json");
+      const cachedPath = getMcpCachePath();
       if (fs.existsSync(cachedPath)) {
         const cached = JSON.parse(fs.readFileSync(cachedPath, "utf8"));
         for (const t of cached) {
@@ -86,8 +86,15 @@ export class McpManager {
       return listed?.tools || [];
     }
     const command = process.platform === "win32" && config.command === "npx" ? "npx.cmd" : (config.command || "node");
-    const env = Object.fromEntries(Object.entries({ ...process.env, ...(config.environment || {}) }).filter(([, value]) => value != null).map(([key, value]) => [key, String(value)]));
-    const child = crossSpawn(command, (config.args || []).map(String), {
+    const isPackaged = Boolean(process.env.MEERA_LAUNCHED_BY === "electron" && process.execPath);
+    const resolvedCommand = (command === "node" && isPackaged) ? process.execPath : command;
+    const env = Object.fromEntries(Object.entries({ 
+      ...process.env, 
+      MEERA_WHATSAPP_DIR: getWhatsAppDir(),
+      ELECTRON_RUN_AS_NODE: (command === "node" && isPackaged) ? "1" : (process.env.ELECTRON_RUN_AS_NODE || "1"),
+      ...(config.environment || {}) 
+    }).filter(([, value]) => value != null).map(([key, value]) => [key, String(value)]));
+    const child = crossSpawn(resolvedCommand, (config.args || []).map(String), {
       cwd: path.resolve(this.root, config.workingDirectory || "."),
       env,
       windowsHide: true,
@@ -246,9 +253,12 @@ export class McpManager {
     // Status tools are always read-only. Return the authoritative file state
     // before touching the child process, even if a stale process reference exists.
     if (original === "whatsapp_status" || original === "whatsapp_link_status") {
-      const statusPath = path.join(this.root, "WhatsApp_MCP_New", ".mcp-status.json");
+      const waDir = getWhatsAppDir();
+      const statusPath = path.join(waDir, ".mcp-status.json");
+      const legacyPath = path.join(this.root, "WhatsApp_MCP_New", ".mcp-status.json");
+      const activePath = fs.existsSync(statusPath) ? statusPath : legacyPath;
       try {
-        const status = JSON.parse(fs.readFileSync(statusPath, "utf8"));
+        const status = JSON.parse(fs.readFileSync(activePath, "utf8"));
         // Validate PID if reported: if process died, the true state is 'stopped'
         if (status.pid && status.state !== "stopped" && status.state !== "unlinked") {
           try {

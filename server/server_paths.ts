@@ -34,13 +34,55 @@ export function dataFile(name: string): string {
   return path.join(dir, name);
 }
 
+/** Base protected vault directory for all MCP components */
+export function getMcpDir(): string {
+  const mcpDir = path.join(DATA_DIR, "mcp");
+  try { fs.mkdirSync(mcpDir, { recursive: true }); } catch {}
+  return mcpDir;
+}
+
+/** Directory for OAuth token stores (Gmail, Google Drive, etc.) */
+export function getMcpTokensDir(): string {
+  const tokensDir = path.join(getMcpDir(), "tokens");
+  try { fs.mkdirSync(tokensDir, { recursive: true }); } catch {}
+  return tokensDir;
+}
+
+/** Directory for WhatsApp Web protected session and status */
+export function getWhatsAppDir(): string {
+  const waDir = path.join(getMcpDir(), "whatsapp");
+  try { fs.mkdirSync(waDir, { recursive: true }); } catch {}
+  return waDir;
+}
+
+/** Path for cached MCP tool schemas advertised directly to Gemini Live */
+export function getMcpCachePath(): string {
+  const configDir = path.join(getMcpDir(), "config");
+  try { fs.mkdirSync(configDir, { recursive: true }); } catch {}
+  const targetCache = path.join(configDir, "cached-mcp-tools.json");
+
+  if (!fs.existsSync(targetCache)) {
+    const root = process.env.MEERA_APP_ROOT || process.cwd();
+    const sourceCandidates = [
+      path.join(root, "config", "cached-mcp-tools.json"),
+      path.join(process.cwd(), "config", "cached-mcp-tools.json")
+    ];
+    for (const src of sourceCandidates) {
+      if (fs.existsSync(src)) {
+        try { fs.copyFileSync(src, targetCache); break; } catch {}
+      }
+    }
+  }
+  return targetCache;
+}
+
 /**
  * Returns the authoritative path to the writable mcp-servers.json configuration file.
  * If the file doesn't exist (e.g. fresh installation or new user), automatically creates
  * it populated with the clean default MCP template ready for their API keys.
  */
 export function getMcpConfigPath(): string {
-  const userConfigDir = path.join(DATA_DIR, "config");
+  const userConfigDir = path.join(getMcpDir(), "config");
   try { fs.mkdirSync(userConfigDir, { recursive: true }); } catch {}
   const targetConfig = path.join(userConfigDir, "mcp-servers.json");
 
@@ -128,7 +170,7 @@ export function getMcpConfigPath(): string {
         environment: {
           GOOGLE_CLIENT_ID: "YOUR_GOOGLE_CLIENT_ID",
           GOOGLE_CLIENT_SECRET: "YOUR_GOOGLE_CLIENT_SECRET",
-          TOKEN_STORE_URI: `file:///${path.join(DATA_DIR, "gmail-token-store").replace(/\\/g, "/")}`
+          TOKEN_STORE_URI: `file:///${path.join(getMcpTokensDir(), "gmail-token-store").replace(/\\/g, "/")}`
         },
         features: ["email_search", "unread_messages", "drafting"]
       },
@@ -142,7 +184,7 @@ export function getMcpConfigPath(): string {
         environment: {
           GOOGLE_CLIENT_ID: "YOUR_GOOGLE_CLIENT_ID",
           GOOGLE_CLIENT_SECRET: "YOUR_GOOGLE_CLIENT_SECRET",
-          TOKEN_STORE_URI: `file:///${path.join(DATA_DIR, "drive-token-store").replace(/\\/g, "/")}`
+          TOKEN_STORE_URI: `file:///${path.join(getMcpTokensDir(), "drive-token-store").replace(/\\/g, "/")}`
         },
         features: ["file_search", "file_read", "file_list", "upload", "download", "folders"]
       }
@@ -157,6 +199,49 @@ export function getMcpConfigPath(): string {
   }
 
   return targetConfig;
+}
+
+/**
+ * Seamlessly migrates legacy token stores and WhatsApp sessions from old loose paths
+ * into the centralized protected vault (%APPDATA%\MEERA\mcp\) without user intervention.
+ */
+export function migrateLegacyMcpData(): void {
+  const mcpDir = getMcpDir();
+  const tokensDir = getMcpTokensDir();
+  const waDir = getWhatsAppDir();
+
+  // 1. Migrate Gmail Token Store
+  const oldGmailToken = path.join(DATA_DIR, "gmail-token-store");
+  const newGmailToken = path.join(tokensDir, "gmail-token-store");
+  if (fs.existsSync(oldGmailToken) && !fs.existsSync(newGmailToken)) {
+    try {
+      fs.copyFileSync(oldGmailToken, newGmailToken);
+      console.log(`[MCP Vault] Migrated Gmail token to: ${newGmailToken}`);
+    } catch {}
+  }
+
+  // 2. Migrate Drive Token Store
+  const oldDriveToken = path.join(DATA_DIR, "drive-token-store");
+  const newDriveToken = path.join(tokensDir, "drive-token-store");
+  if (fs.existsSync(oldDriveToken) && !fs.existsSync(newDriveToken)) {
+    try {
+      fs.copyFileSync(oldDriveToken, newDriveToken);
+      console.log(`[MCP Vault] Migrated Google Drive token to: ${newDriveToken}`);
+    } catch {}
+  }
+
+  // 3. Migrate WhatsApp Web Session
+  const root = process.env.MEERA_APP_ROOT || process.cwd();
+  const oldWaAuth = path.join(root, "WhatsApp_MCP_New", ".wwebjs_auth");
+  const newWaAuth = path.join(waDir, "session");
+  if (fs.existsSync(oldWaAuth) && !fs.existsSync(newWaAuth)) {
+    try {
+      fs.cpSync(oldWaAuth, newWaAuth, { recursive: true });
+      console.log(`[MCP Vault] Migrated WhatsApp Web session to protected vault: ${newWaAuth}`);
+    } catch (err) {
+      console.warn("[MCP Vault] WhatsApp session migration note:", err);
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------

@@ -12,13 +12,17 @@ import { TOOL_DEFINITIONS, executeWhatsAppTool } from "./whatsapp-tools.mjs";
 
 const { Client, LocalAuth } = whatsappPkg;
 const appDir = path.dirname(fileURLToPath(import.meta.url));
+const storageDir = process.env.MEERA_WHATSAPP_DIR || appDir;
+try { fsSync.mkdirSync(storageDir, { recursive: true }); } catch {}
+
 let state = "starting";
 let lastQr = false;
 let qrText = "";
 let client;
-const statusFile = path.join(appDir, ".mcp-status.json");
-const lockFile = path.join(appDir, ".mcp.lock");
-const userDataDir = path.join(appDir, ".wwebjs_auth", "session");
+const statusFile = path.join(storageDir, ".mcp-status.json");
+const lockFile = path.join(storageDir, ".mcp.lock");
+const authSessionDir = path.join(storageDir, "session");
+const userDataDir = path.join(authSessionDir, "session");
 let relinkRequired = false;
 try { relinkRequired = JSON.parse(fsSync.readFileSync(statusFile, "utf8")).state === "unlinked"; } catch {}
 
@@ -75,11 +79,12 @@ function result(text, structuredContent) {
 async function startWhatsApp() {
   cleanupOwnedBrowser();
   if (relinkRequired) {
+    try { await fs.rm(authSessionDir, { recursive: true, force: true }); } catch {}
     try { await fs.rm(path.join(appDir, ".wwebjs_auth"), { recursive: true, force: true }); } catch {}
     relinkRequired = false;
   }
   client = new Client({
-    authStrategy: new LocalAuth({ dataPath: path.join(appDir, ".wwebjs_auth") }),
+    authStrategy: new LocalAuth({ dataPath: authSessionDir }),
     puppeteer: {
       timeout: 120000,
       protocolTimeout: 120000,
@@ -123,6 +128,7 @@ async function callTool(name, args = {}) {
   if (name === "whatsapp_status") return result(JSON.stringify({ state, qr_required: lastQr }));
   if (name === "whatsapp_delink") {
     try { await client?.logout(); } catch {}
+    try { await fs.rm(authSessionDir, { recursive: true, force: true }); } catch {}
     try { await fs.rm(path.resolve(".wwebjs_auth"), { recursive: true, force: true }); } catch {}
     state = "unlinked";
     lastQr = true;
