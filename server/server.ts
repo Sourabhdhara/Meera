@@ -1153,9 +1153,11 @@ async function startServer() {
                 const latestEpisode = await dbGetLatestEpisode();
                 let recoveryNote = "";
                 if (dbRecoveryState === "RESTORED_FROM_BACKUP") {
-                  recoveryNote = " NOTE: A previous session abruptly ended; your memory was recovered from backup so the last few turns might be missing. If relevant, gently let the user know you are ready but might need a reminder if anything was said right before the previous shutdown.";
+                  recoveryNote = " NOTE: meera.db was corrupted or missing and was restored from backup. Inform the user gracefully and naturally that their data was safely restored from backup, but a couple of very recent turns right before the previous session abruptly stopped might need a quick reminder.";
                 } else if (dbRecoveryState === "CORRUPTED_FRESH_START") {
-                  recoveryNote = " NOTE: A critical storage error corrupted the previous memory file, so you are starting with a fresh memory baseline. Be natural, transparent, and polite about this fresh start.";
+                  recoveryNote = " NOTE: Both meera.db and the backup were corrupted, so a fresh new database had to be created. Inform the user honestly, warmly, and gracefully that due to storage corruption their previous memory could not be preserved and you are starting with a fresh slate.";
+                } else if (dbRecoveryState === "FIRST_INSTALL") {
+                  recoveryNote = " NOTE: Both database files were not found because this is a brand new fresh installation. Give a warm, welcoming introduction as their personal AI companion.";
                 }
 
                 const prompt = `[System Event - Jarvis Startup Briefing]: The user has just launched MEERA.${recoveryNote} Greet the user warmly in your natural companion voice. Check if you have unread messages on WhatsApp (via mcp_whatsapp_whatsapp_get_unread_messages) or new unread emails (via mcp_gmail_message_search with 'is:unread label:INBOX'). Brief them smoothly like Jarvis with any new incoming messages or updates, or simply ask how you can help if there are none. Remember: NEVER volunteer or announce the current time unless asked.`;
