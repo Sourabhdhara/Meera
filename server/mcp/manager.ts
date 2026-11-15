@@ -1,5 +1,6 @@
 import path from "path";
 import fs from "fs";
+import crypto from "crypto";
 import { spawn, ChildProcessWithoutNullStreams } from "child_process";
 import crossSpawn from "cross-spawn";
 import readline from "readline";
@@ -89,37 +90,64 @@ export class McpManager {
     const isPackaged = Boolean(process.env.MEERA_LAUNCHED_BY === "electron" && process.execPath);
     const resolvedCommand = (command === "node" && isPackaged) ? process.execPath : command;
 
-    // Self-Healing OAuth Token Store & Credential Invalidation:
-    // If user changes their GOOGLE_CLIENT_ID or client credentials, automatically invalidate
-    // stale cached tokens to avoid invalid_grant or authentication deadlock.
+    // Universal Self-Healing OAuth Token Store & Credential Invalidation:
+    // Any MCP server that defines TOKEN_STORE_URI, or uses client credentials (like Spotify, Notion, Slack, Google)
+    // automatically tracks its environment credentials fingerprint. If the user changes keys or client IDs,
+    // stale cached tokens are wiped instantly to avoid invalid_grant or authentication deadlock!
     const tokensDir = getMcpTokensDir();
     const serverEnv = { ...(config.environment || {}) };
 
-    if (config.id === "gmail" || config.id === "google-drive") {
-      const tokenFileName = config.id === "gmail" ? "gmail-token-store" : "drive-token-store";
-      const tokenFilePath = path.join(tokensDir, tokenFileName);
-      const clientId = serverEnv.GOOGLE_CLIENT_ID || "";
-      const metaFilePath = path.join(tokensDir, `.${config.id}-client-meta.json`);
-
-      // If user replaced placeholder or changed client credentials, wipe old token
-      if (clientId && clientId !== "YOUR_GOOGLE_CLIENT_ID_HERE" && clientId !== "YOUR_GOOGLE_CLIENT_ID") {
-        let prevClientId = "";
-        try {
-          if (fs.existsSync(metaFilePath)) {
-            prevClientId = JSON.parse(fs.readFileSync(metaFilePath, "utf8")).client_id || "";
-          }
-        } catch {}
-
-        if (prevClientId && prevClientId !== clientId) {
-          console.log(`[MCP ${config.id}] Detected changed GOOGLE_CLIENT_ID. Purging stale auth token...`);
-          try { fs.rmSync(tokenFilePath, { force: true, recursive: true }); } catch {}
-        }
-        try { fs.writeFileSync(metaFilePath, JSON.stringify({ client_id: clientId, updated_at: new Date().toISOString() }, null, 2), "utf8"); } catch {}
+    // Standardize default token store path for any server that needs it
+    const defaultTokenPath = path.join(tokensDir, `${config.id}-token-store`);
+    if (serverEnv.TOKEN_STORE_URI) {
+      // Re-route relative or hardcoded token store URIs to the authoritative vault
+      if (serverEnv.TOKEN_STORE_URI.includes("token-store")) {
+        serverEnv.TOKEN_STORE_URI = `file:///${defaultTokenPath.replace(/\\/g, "/")}`;
       }
+    } else if (config.id === "gmail" || config.id === "google-drive" || config.id === "spotify") {
+      serverEnv.TOKEN_STORE_URI = `file:///${defaultTokenPath.replace(/\\/g, "/")}`;
+    }
 
-      // Authoritative token store URI pointing to protected AppData vault
-      const authoritativeUri = `file:///${tokenFilePath.replace(/\\/g, "/")}`;
-      serverEnv.TOKEN_STORE_URI = authoritativeUri;
+    // Extract credential keys (IDs, Secrets, API Keys, Tokens) to build an identity fingerprint
+    const credentialEntries = Object.entries(serverEnv)
+      .filter(([k]) => !["TOKEN_STORE_URI", "MEERA_WHATSAPP_DIR", "ELECTRON_RUN_AS_NODE"].includes(k))
+      .sort(([a], [b]) => a.localeCompare(b));
+
+    const credentialFingerprint = crypto.createHash("sha256")
+      .update(JSON.stringify(credentialEntries))
+      .digest("hex");
+
+    const metaFilePath = path.join(tokensDir, `.${config.id}-auth-fingerprint.json`);
+    let prevFingerprint = "";
+    try {
+      if (fs.existsSync(metaFilePath)) {
+        prevFingerprint = JSON.parse(fs.readFileSync(metaFilePath, "utf8")).fingerprint || "";
+      }
+    } catch {}
+
+    const hasRealCredentials = credentialEntries.some(([, v]) => 
+      v && typeof v === "string" && !v.includes("YOUR_") && !v.includes("HERE") && v.trim().length > 0
+    );
+
+    if (hasRealCredentials && prevFingerprint && prevFingerprint !== credentialFingerprint) {
+      console.log(`[MCP ${config.id}] Detected changed credentials for ${config.id}. Auto-purging stale tokens...`);
+      // 1. Delete standard token store file if present
+      if (fs.existsSync(defaultTokenPath)) {
+        try { fs.rmSync(defaultTokenPath, { force: true, recursive: true }); } catch {}
+      }
+      // 2. Delete any custom token path specified in TOKEN_STORE_URI
+      if (serverEnv.TOKEN_STORE_URI && serverEnv.TOKEN_STORE_URI.startsWith("file:///")) {
+        const customPath = serverEnv.TOKEN_STORE_URI.replace("file:///", "");
+        if (fs.existsSync(customPath)) {
+          try { fs.rmSync(customPath, { force: true, recursive: true }); } catch {}
+        }
+      }
+    }
+
+    if (hasRealCredentials) {
+      try {
+        fs.writeFileSync(metaFilePath, JSON.stringify({ fingerprint: credentialFingerprint, updated_at: new Date().toISOString() }, null, 2), "utf8");
+      } catch {}
     }
 
     const env = Object.fromEntries(Object.entries({ 
