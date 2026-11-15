@@ -2,14 +2,15 @@ import { BaseTool } from "../base";
 
 export class GetCurrentTimeTool extends BaseTool {
   name = "get_current_time";
-  description = "Returns the authoritative current local date and time from this computer. Use this whenever the user asks for the current time or date; do not guess. Default timezone is Asia/Kolkata (IST).";
+  description = "Returns the authoritative current local date and time from the user's computer. Use this whenever the user asks for the current time or date; do not guess.";
 
   async run(args: any = {}) {
-    let timezone = String(args?.timezone || "Asia/Kolkata");
-    try { new Intl.DateTimeFormat("en-IN", { timeZone: timezone }).format(); }
-    catch { timezone = "Asia/Kolkata"; }
+    const systemTz = Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Kolkata";
+    let timezone = String(args?.timezone || systemTz);
+    try { new Intl.DateTimeFormat("en-US", { timeZone: timezone }).format(); }
+    catch { timezone = systemTz; }
     const now = new Date();
-    const formatted = new Intl.DateTimeFormat("en-IN", {
+    const formatted = new Intl.DateTimeFormat("en-US", {
       timeZone: timezone, dateStyle: "full", timeStyle: "long", hour12: true
     }).format(now);
     return { result: formatted, timezone, iso_utc: now.toISOString(), epoch_ms: now.getTime() };

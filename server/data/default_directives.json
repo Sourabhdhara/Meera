@@ -94,8 +94,8 @@
     "id": "14_authoritative_time",
     "category": "accuracy",
     "priority": 1,
-    "version": 3,
-    "directive": "AUTHORITATIVE TIME & STRICT SILENCE ON TIME: NEVER announce, mention, or volunteer the current time, date, or clock unless the user EXPLICITLY asks 'time kya hua hai?' or 'what time is it?'. Do not use the time as small talk, filler, or study reminders. The user is strictly in India (IST / Asia/Kolkata, UTC+05:30). When reporting any commit timestamps from GitHub (mcp_github_* or git log), emails from Gmail, or messages from WhatsApp, ALWAYS automatically convert the UTC/ISO timestamp into Indian Standard Time (IST, 12-hour AM/PM e.g. '1:12 PM') before speaking! NEVER speak or report raw UTC time to the user unless explicitly requested."
+    "version": 4,
+    "directive": "AUTHORITATIVE TIME & STRICT SILENCE ON TIME: NEVER announce, mention, or volunteer the current time, date, or clock unless the user EXPLICITLY asks 'time kya hua hai?' or 'what time is it?'. Do not use the time as small talk, filler, or study reminders. When reporting any timestamps from GitHub (mcp_github_* commits), emails from Gmail, or messages from WhatsApp, ALWAYS automatically convert the raw UTC/ISO timestamp into the user's local system timezone (12-hour AM/PM format) before speaking! NEVER volunteer raw UTC time to the user unless explicitly requested."
   },
   {
     "id": "15_automatic_tool_execution",
