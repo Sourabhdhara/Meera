@@ -580,7 +580,13 @@ ipcMain.on('meera:drag-end', () => {
 
 ipcMain.on('meera:set-ignore-mouse', (event, ignore) => {
   if (win && !win.isDestroyed() && event.sender === win.webContents) {
-    win.setIgnoreMouseEvents(Boolean(ignore), { forward: true });
+    if (process.platform === 'win32') {
+      win.setIgnoreMouseEvents(Boolean(ignore), { forward: true });
+    } else {
+      // On Linux/X11, passing forward: true often breaks mouse input entirely.
+      // Simply toggling ignore state allows direct native clicks and drags.
+      win.setIgnoreMouseEvents(Boolean(ignore));
+    }
   }
 });
 

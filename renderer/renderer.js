@@ -61,9 +61,19 @@ async function applyAnimationPreference() {
 }
 applyAnimationPreference();
 
-// Ignore mouse clicks on transparent parts
+// Ignore mouse clicks on transparent parts (handles mouse enter/leave on avatar cleanly)
+meeraGif.addEventListener('mouseenter', () => {
+  window.meera?.setIgnoreMouse(false);
+});
+meeraGif.addEventListener('mouseleave', () => {
+  if (!dragging) {
+    window.meera?.setIgnoreMouse(true);
+  }
+});
 document.addEventListener('mousemove', (event) => {
-  window.meera.setIgnoreMouse(event.target !== meeraGif);
+  if (dragging) return;
+  const isOverAvatar = event.target === meeraGif;
+  window.meera?.setIgnoreMouse(!isOverAvatar);
 });
 
 // Live WebSocket Audio & Brain Client
