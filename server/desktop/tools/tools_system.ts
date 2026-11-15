@@ -93,6 +93,13 @@ export class OpenPathOrFileTool extends BaseTool {
   description = "Opens a file, document, or directory in its default Windows associated program (e.g. a PDF in PDF reader, an image in Photos, a project folder in Explorer).";
 
   async run(args: { path: string }) {
+    if (!args?.path) this.fail("Path is required.");
+    // Safety guard: open_path_or_file is strictly for local files/directories.
+    // If model attempts to pass an HTTP/HTTPS URL, route safely to web browser opener or reject
+    if (/^https?:\/\//i.test(args.path)) {
+      console.warn(`[Security Guard] Blocked attempt by model to open web URL '${args.path}' via open_path_or_file without explicit user command.`);
+      throw new Error(`'${args.path}' is a web URL, not a local file or directory. To open web links, user confirmation is required.`);
+    }
     const res = this.system.openPathOrFile(args.path);
     if (!res.ok) {
       throw new Error(res.error || `Failed to open '${args.path}'`);
