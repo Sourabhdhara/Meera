@@ -21,6 +21,7 @@ app.setName('MEERA');
 const SERVER_PORT = 3000;
 const SERVER_ORIGIN = `http://127.0.0.1:${SERVER_PORT}`;
 const APP_ROOT = app.isPackaged ? path.join(process.resourcesPath, 'app') : path.join(__dirname, '..');
+const APP_ICON = path.join(APP_ROOT, 'assets', 'icon.ico');
 
 // Check and apply pending atomic update before loading entrypoint
 try {
@@ -163,6 +164,7 @@ function createWindow() {
     height: COMPANION_HEIGHT,
     x: startupPosition.x,
     y: startupPosition.y,
+    icon: APP_ICON,
     frame: false,
     transparent: true,
     resizable: false,
@@ -474,6 +476,7 @@ ipcMain.on('meera:toggle-menu', () => {
     y: wizardY,
     width: wizardWidth,
     height: wizardHeight,
+    icon: APP_ICON,
     frame: false,
     transparent: true,
     resizable: false,

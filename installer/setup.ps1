@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     MEERA AI Companion — Ultra-Light 2MB Web Bootstrapper & Installer
     Installs MEERA securely into C:\ProgramData\MEERA\ and configures Desktop Shortcut.
@@ -109,6 +109,7 @@ $Shortcut.TargetPath = "npx.cmd"
 $Shortcut.Arguments = "electron electron\main.cjs"
 $Shortcut.WorkingDirectory = $CoreDir
 $Shortcut.Description = "MEERA AI Desktop Companion"
+$Shortcut.IconLocation = "$CoreDir\assets\icon.ico"
 $Shortcut.WindowStyle = 1
 $Shortcut.Save()
 
