@@ -591,11 +591,12 @@ ipcMain.on('meera:drag-end', () => {
 ipcMain.on('meera:set-ignore-mouse', (event, ignore) => {
   if (win && !win.isDestroyed() && event.sender === win.webContents) {
     if (process.platform === 'win32') {
+      // Windows requires forward: true to click through transparent canvas
       win.setIgnoreMouseEvents(Boolean(ignore), { forward: true });
     } else {
-      // On Linux/X11, passing forward: true often breaks mouse input entirely.
-      // Simply toggling ignore state allows direct native clicks and drags.
-      win.setIgnoreMouseEvents(Boolean(ignore));
+      // On Linux (X11/Wayland), ANY call to setIgnoreMouseEvents(true) permanently disables
+      // pointer events on the entire transparent window!
+      // Therefore, on Linux we NEVER ignore mouse events so clicks always reach the avatar.
     }
   }
 });
