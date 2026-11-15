@@ -86,9 +86,19 @@ export function getMcpConfigPath(): string {
   try { fs.mkdirSync(userConfigDir, { recursive: true }); } catch {}
   const targetConfig = path.join(userConfigDir, "mcp-servers.json");
 
-  // If already exists in writable AppData, return it
+  // If already exists in writable AppData and is valid/non-empty, return it
   if (fs.existsSync(targetConfig)) {
-    return targetConfig;
+    try {
+      const content = fs.readFileSync(targetConfig, "utf8").trim();
+      if (content.length > 0) {
+        const parsed = JSON.parse(content);
+        if (parsed && Array.isArray(parsed.servers) && parsed.servers.length > 0) {
+          return targetConfig;
+        }
+      }
+    } catch {
+      // Corrupt or empty JSON -> fall through to re-seed template!
+    }
   }
 
   // Check if project root or package template exists
