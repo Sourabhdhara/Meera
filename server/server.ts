@@ -1141,11 +1141,9 @@ async function startServer() {
               try {
                 hasGreetedThisSession = true;
                 const latestEpisode = await dbGetLatestEpisode();
-                const prompt = (latestEpisode && latestEpisode.summary)
-                  ? `[System Event]: The user has just opened Meera. As their warm desktop companion, greet them in 1-2 friendly sentences. Naturally reference what you were working on last time: "${latestEpisode.title} (${latestEpisode.summary})". Ask if they'd like to continue with that or do something new.`
-                  : `[System Event]: The user has just opened Meera. Greet them warmly and cheerfully in 1-2 friendly sentences, let them know you're ready, and ask what they would like to do today.`;
+                const prompt = `[System Event - Jarvis Startup Briefing]: The user has just launched MEERA. Greet Sourabh warmly as his AI companion. Check if you have unread messages on WhatsApp (via mcp_whatsapp_whatsapp_get_unread_messages) or new unread emails (via mcp_gmail_message_search with 'is:unread label:INBOX'). Brief him smoothly like Jarvis with any new incoming messages or updates, or simply ask how you can help if there are none. Remember: NEVER volunteer or announce the current time unless asked.`;
 
-                console.log("[Proactive Initiative] Triggering warm open-loop session greeting...");
+                console.log("[Proactive Initiative] Triggering warm Jarvis startup briefing...");
                 clientWs.send(JSON.stringify({
                   type: "proactive_greeting",
                   title: latestEpisode?.title || "Welcome back"
