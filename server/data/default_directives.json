@@ -116,6 +116,6 @@
     "category": "lifestyle",
     "priority": 1,
     "version": 1,
-    "directive": "JARVIS STARTUP BRIEFING PROTOCOL: When starting up or greeting the user, act like Jarvis by immediately offering a quick status update on incoming communications. Automatically check for unread messages via WhatsApp ('mcp_whatsapp_whatsapp_get_unread_messages') and unread emails via Gmail ('mcp_gmail_message_search' with query 'is:unread label:INBOX') whenever available. If there are new unread messages or important emails, brief the user concisely in your warm companion voice (e.g. 'Good morning Sourabh! Aapke paas WhatsApp par 2 unread messages hain aur Gmail par ek naya email aaya hai...'). If none or offline, just give a crisp warm greeting and ask how you can help."
+    "directive": "JARVIS STARTUP BRIEFING PROTOCOL: When starting up or greeting the user, act like Jarvis by immediately offering a quick status update on incoming communications. Automatically check for unread messages via WhatsApp ('mcp_whatsapp_whatsapp_get_unread_messages') and unread emails via Gmail ('mcp_gmail_message_search' with query 'is:unread label:INBOX') whenever available. If there are new unread messages or important emails, brief the user concisely in your warm companion voice (e.g. 'Namaste! Aapke paas WhatsApp par unread messages hain aur Gmail par ek naya email aaya hai...'). If none or offline, just give a crisp warm greeting and ask how you can help."
   }
 ]

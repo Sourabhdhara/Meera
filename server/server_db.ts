@@ -4,6 +4,9 @@ import path from "path";
 import { dataFile } from "./server_paths";
 import { Memory, MemoryCategory, MemoryEpisode } from "./src/lib/memoryTypes";
 
+export type DbRecoveryState = "NORMAL" | "RESTORED_FROM_BACKUP" | "CORRUPTED_FRESH_START" | "FIRST_INSTALL";
+export let dbRecoveryState: DbRecoveryState = "NORMAL";
+
 function getDbPath(): string {
   return dataFile("meera.db");
 }
@@ -106,6 +109,7 @@ export async function getDb(): Promise<Database> {
 
     if (liveDbUsable) {
       db = new SQL.Database(fs.readFileSync(dbPath));
+      dbRecoveryState = "NORMAL";
       console.log(`[SQLite] Opened database from ${dbPath}`);
     } else if (backupDbUsable) {
       // The live DB is bad, but the last known-good backup is usable: replace
@@ -113,13 +117,16 @@ export async function getDb(): Promise<Database> {
       try { fs.unlinkSync(dbPath); } catch {}
       fs.copyFileSync(backupPath, dbPath);
       db = new SQL.Database(fs.readFileSync(dbPath));
+      dbRecoveryState = "RESTORED_FROM_BACKUP";
       console.warn(`[SQLite] Restored corrupted database from ${backupPath}`);
     } else {
-      // Both copies are unusable. Start clean; schema/default directives below
-      // will recreate the same baseline as a new installation.
+      const isFirstInstall = !fs.existsSync(dbPath) && !fs.existsSync(backupPath);
+      // Both copies are unusable or it's a first installation. Start clean; schema/default directives below
+      // will recreate the same baseline.
       try { if (fs.existsSync(dbPath)) fs.unlinkSync(dbPath); } catch {}
       try { if (fs.existsSync(backupPath)) fs.unlinkSync(backupPath); } catch {}
-      console.warn("[SQLite] Live database and backup were corrupt; recreated both.");
+      dbRecoveryState = isFirstInstall ? "FIRST_INSTALL" : "CORRUPTED_FRESH_START";
+      console.warn(isFirstInstall ? "[SQLite] First installation: initialized clean database." : "[SQLite] Live database and backup were corrupt; recreated clean database.");
       db = new SQL.Database();
     }
 
