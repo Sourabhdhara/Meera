@@ -115,10 +115,12 @@ public class WinDesktopManager {
 
                 // Match against window title, process name, or common aliases
                 bool matched = lowerTitle.Contains(q) || proc.Contains(q);
-                if (!matched && q == "explorer" && lowerTitle.Contains("file explorer")) matched = true;
+                if (!matched && (q == "explorer" || q == "file explorer" || q == "files" || q == "folder" || q == "file manager") && (proc == "explorer" || cls == "CabinetWClass" || lowerTitle.Contains("file explorer"))) matched = true;
+                if (!matched && (q == "chrome" || q == "google chrome") && (proc.Contains("chrome") || lowerTitle.Contains("chrome"))) matched = true;
                 if (!matched && (q == "vs code" || q == "vscode" || q == "code") && (lowerTitle.Contains("visual studio code") || proc.Contains("code"))) matched = true;
                 if (!matched && q == "cmd" && (proc == "cmd" || lowerTitle.Contains("cmd.exe"))) matched = true;
                 if (!matched && q == "terminal" && (proc.Contains("terminal") || lowerTitle.Contains("terminal"))) matched = true;
+                if (!matched && (q == "meera") && (lowerTitle.Contains("meera") || proc.Contains("electron") || proc.Contains("meera"))) matched = true;
 
                 if (matched) {
                     target = hWnd;
