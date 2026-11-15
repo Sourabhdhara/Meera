@@ -8,51 +8,81 @@
   justify-content: space-between;
   align-items: center;
   padding: 10px 16px;
-  border-bottom: 1px solid var(--line);
-  background: #ffffff08;
+  border-bottom: 1px solid var(--line-hairline, var(--line));
+  background: rgba(255, 255, 255, 0.02);
 }
 
-.recall-toolbar #count { flex: 1 1 auto; }
+.recall-toolbar #count { 
+  flex: 1 1 auto; 
+  color: var(--text-secondary, var(--text));
+  font-size: 12.5px;
+  font-weight: 600;
+}
 
 .recall-chip {
-  padding: 5px 8px;
-  border: 1px solid var(--line);
+  padding: 5px 9px;
+  border: 1px solid var(--line-card, var(--line));
   border-radius: 8px;
-  background: #ffffff08;
-  color: var(--muted);
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--text-muted, var(--muted));
   font: 11px var(--mono);
+  transition: all 0.2s ease;
 }
 
-.recall-chip:hover { color: var(--text); background: #ffffff13; }
-.recall-chip[aria-pressed="true"], #seed {
-  border-color: #22d3ee50;
-  background: #22d3ee14;
-  color: var(--cyan);
+.recall-chip:hover { 
+  color: var(--text-main, var(--text)); 
+  background: rgba(255, 255, 255, 0.08); 
 }
+
+.recall-chip[aria-pressed="true"], #seed {
+  border-color: rgba(34, 211, 238, 0.45);
+  background: rgba(34, 211, 238, 0.12);
+  color: var(--accent-cyan, var(--cyan));
+}
+
 .recall-filters .recall-chip { border-radius: 999px; }
+
 #seed-form {
   margin-bottom: 12px;
   padding: 12px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-card, var(--line));
   border-radius: 12px;
-  background: #080812;
+  background: rgba(0, 0, 0, 0.35);
 }
+
 #seed-form fieldset { margin: 0 0 10px; padding: 0; border: 0; }
-#seed-form legend, #seed-form label { color: var(--muted); font: 11px var(--mono); }
+#seed-form legend, #seed-form label { color: var(--text-muted, var(--muted)); font: 11px var(--mono); }
 .category-grid { margin-top: 7px; }
-#memory-text { resize: vertical; min-height: 60px; }
+#memory-text { 
+  resize: vertical; 
+  min-height: 60px;
+  border: 1px solid var(--line-card, var(--line));
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.45);
+  color: var(--text-main, var(--text));
+}
 .seed-actions { justify-content: flex-end; margin-top: 8px; }
+
 .recall-list { display: grid; gap: 8px; margin: 12px 0 0; padding: 0; list-style: none; }
+
 .memory-entry {
   --category: #a5b4fc;
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 8px;
-  padding: 11px;
-  border: 1px solid color-mix(in srgb, var(--category) 25%, transparent);
-  border-radius: 11px;
-  background: color-mix(in srgb, var(--category) 6%, #090910);
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--category) 22%, rgba(255, 255, 255, 0.06));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--category) 5%, rgba(14, 16, 24, 0.85));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: all 0.2s ease;
 }
+
+.memory-entry:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
 .memory-entry[data-category="identity"] { --category: #fbbf24; }
 .memory-entry[data-category="preference"] { --category: #f472b6; }
 .memory-entry[data-category="goal"] { --category: #34d399; }
@@ -60,8 +90,18 @@
 .memory-entry[data-category="relationship"] { --category: #c084fc; }
 .memory-entry[data-category="emotional"] { --category: #fb7185; }
 .memory-entry[data-category="practice"] { --category: #2dd4bf; }
-.memory-category { align-self: center; color: var(--category); font: 11px var(--mono); }
-.memory-entry p { grid-column: 1 / -1; margin: 0; font-size: 13px; line-height: 1.45; overflow-wrap: anywhere; white-space: pre-wrap; }
+
+.memory-category { align-self: center; color: var(--category); font: 11px var(--mono); font-weight: 600; }
+.memory-entry p { 
+  grid-column: 1 / -1; 
+  margin: 0; 
+  font-size: 13px; 
+  line-height: 1.45; 
+  color: var(--text-secondary, var(--text));
+  overflow-wrap: anywhere; 
+  white-space: pre-wrap; 
+}
+
 .remove-memory:hover, #recall-status.error { color: #fda4af; }
-.empty-memory, #recall-status { color: var(--muted); font-size: 12px; }
+.empty-memory, #recall-status { color: var(--text-muted, var(--muted)); font-size: 12px; }
 .empty-memory { padding: 12px 0; text-align: center; }

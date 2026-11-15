@@ -1,16 +1,18 @@
 .settings.share-window {
-  border-color: #22d3ee38;
-  background: radial-gradient(ellipse at top left, #17255455, transparent 68%), #020617f2;
-  box-shadow: inset 0 1px #a5f3fc12;
+  border-color: var(--line-strong);
+  background: 
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(6, 182, 212, 0.12), transparent 70%),
+    linear-gradient(180deg, rgba(16, 18, 28, 0.94) 0%, rgba(8, 9, 14, 0.98) 100%);
+  box-shadow: inset 0 1px 0 var(--top-rim, rgba(255, 255, 255, 0.15));
 }
 
-.settings.share-window:has(#vision-indicator.paused) { border-color: #fbbf2440; }
+.settings.share-window:has(#vision-indicator.paused) { border-color: rgba(251, 191, 36, 0.4); }
 
 #content.share-content {
   display: grid;
   grid-template-rows: minmax(110px, 1fr) auto;
-  gap: 10px;
-  padding: 10px 14px 12px;
+  gap: 12px;
+  padding: 12px 16px 14px;
 }
 
 .share-preview {
@@ -19,9 +21,10 @@
   place-items: center;
   width: 100%;
   overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: 11px;
-  background: #0f172a;
+  border: 1px solid var(--line-card, var(--line));
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.45);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .share-preview video {
@@ -34,7 +37,7 @@
 
 .share-preview p, #share-status {
   margin: 0;
-  color: var(--muted);
+  color: var(--text-muted, var(--muted));
   font-size: 12px;
   text-align: center;
 }
@@ -45,7 +48,7 @@
 }
 
 .share-controls label {
-  color: var(--text);
+  color: var(--text-main, var(--text));
   font-size: 12px;
   font-weight: 600;
 }
