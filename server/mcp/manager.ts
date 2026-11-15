@@ -3,6 +3,7 @@ import fs from "fs";
 import { spawn, ChildProcessWithoutNullStreams } from "child_process";
 import crossSpawn from "cross-spawn";
 import readline from "readline";
+import { getMcpConfigPath } from "../server_paths";
 
 type ServerConfig = { id: string; name?: string; enabled?: boolean; transport: "stdio" | "http" | "sse"; command?: string; args?: string[]; workingDirectory?: string; environment?: Record<string, string>; url?: string };
 type Pending = { resolve: (v: any) => void; reject: (e: Error) => void };
@@ -34,7 +35,14 @@ export class McpManager {
       }
     } catch {}
   }
-  reload() { try { this.configs = JSON.parse(fs.readFileSync(path.join(this.root, "config", "mcp-servers.json"), "utf8")).servers || []; } catch { this.configs = []; } }
+  reload() { 
+    try { 
+      const configPath = getMcpConfigPath();
+      this.configs = JSON.parse(fs.readFileSync(configPath, "utf8")).servers || []; 
+    } catch { 
+      this.configs = []; 
+    } 
+  }
   getConfigs() { this.reload(); return this.configs; }
   async reconcile() {
     this.reload();

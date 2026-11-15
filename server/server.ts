@@ -40,6 +40,7 @@ import {
   hasGeminiApiKey,
   setGeminiApiKey,
   clearGeminiApiKey,
+  getMcpConfigPath,
 } from "./server_paths";
 import { spawn } from "child_process";
 import { McpManager } from "./mcp/manager";
@@ -968,7 +969,8 @@ async function startServer() {
                       })();
                     } else if (fc.name === "telegram_get_updates" || fc.name === "telegram_send_message") {
                       (async () => { try {
-                        const cfg = JSON.parse(fs.readFileSync(path.join(process.env.MEERA_APP_ROOT || process.cwd(), "config", "mcp-servers.json"), "utf8"));
+                        const configPath = getMcpConfigPath();
+                        const cfg = JSON.parse(fs.readFileSync(configPath, "utf8"));
                         const token = cfg.servers.find((server: any) => server.id === "telegram")?.environment?.TELEGRAM_BOT_API_TOKEN;
                         if (!token) throw new Error("Telegram bot token is not configured.");
                         const api = `https://api.telegram.org/bot${token}`;
@@ -985,8 +987,7 @@ async function startServer() {
                       } })();
                     } else if (fc.name === "mcp_open_config") {
                       try {
-                        const configPath = path.join(process.env.MEERA_APP_ROOT || process.cwd(), "config", "mcp-servers.json");
-                        if (!fs.existsSync(configPath)) throw new Error(`MCP config not found: ${configPath}`);
+                        const configPath = getMcpConfigPath();
                         const child = spawn("notepad.exe", [configPath], { detached: true, stdio: "ignore", windowsHide: false });
                         child.unref();
                         session.sendToolResponse({ functionResponses: [{ name: fc.name, response: { output: { opened: true, path: configPath } }, id: fc.id }] });
