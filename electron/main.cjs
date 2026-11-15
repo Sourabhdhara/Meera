@@ -10,6 +10,7 @@ const http = require('http');
 const fs = require('fs');
 const { spawn, execFileSync } = require('child_process');
 const { pathToFileURL } = require('url');
+const AutoUpdater = require('./updater.cjs');
 
 // Performance and Audio switches
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
@@ -20,7 +21,20 @@ app.setName('MEERA');
 const SERVER_PORT = 3000;
 const SERVER_ORIGIN = `http://127.0.0.1:${SERVER_PORT}`;
 const APP_ROOT = app.isPackaged ? path.join(process.resourcesPath, 'app') : path.join(__dirname, '..');
+
+// Check and apply pending atomic update before loading entrypoint
+try {
+  AutoUpdater.applyPendingUpdateOnStartup(APP_ROOT);
+} catch (_) {}
+
 const SERVER_ENTRY = path.join(APP_ROOT, 'dist', 'server.cjs');
+
+// Initialize background auto-updater
+try {
+  const pkg = require(path.join(APP_ROOT, 'package.json'));
+  const updater = new AutoUpdater(APP_ROOT, pkg.version || '1.0.0');
+  updater.startPeriodicCheck();
+} catch (_) {}
 
 let win = null;
 let menuWin = null;
