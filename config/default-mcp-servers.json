@@ -1,0 +1,128 @@
+{
+  "servers": [
+    {
+      "id": "github",
+      "name": "GitHub",
+      "enabled": true,
+      "transport": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "environment": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "YOUR_GITHUB_PERSONAL_ACCESS_TOKEN_HERE"
+      },
+      "features": [
+        "repositories",
+        "issues",
+        "commits",
+        "pull_requests"
+      ]
+    },
+    {
+      "id": "whatsapp",
+      "name": "WhatsApp",
+      "enabled": true,
+      "transport": "stdio",
+      "command": "node",
+      "args": [
+        "WhatsApp_MCP_New/server.mjs"
+      ],
+      "workingDirectory": ".",
+      "features": [
+        "status",
+        "tools",
+        "logs",
+        "link",
+        "delink",
+        "messages",
+        "contacts",
+        "groups",
+        "files",
+        "locations"
+      ]
+    },
+    {
+      "id": "youtube",
+      "name": "YouTube",
+      "enabled": true,
+      "transport": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@kirbah/mcp-youtube"
+      ],
+      "environment": {
+        "YOUTUBE_API_KEY": "YOUR_YOUTUBE_API_KEY_HERE"
+      },
+      "features": [
+        "video_search",
+        "transcripts",
+        "channel_metadata"
+      ]
+    },
+    {
+      "id": "telegram",
+      "name": "Telegram",
+      "enabled": true,
+      "transport": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "telegram-bot-mcp-server"
+      ],
+      "environment": {
+        "TELEGRAM_BOT_API_TOKEN": "YOUR_TELEGRAM_BOT_API_TOKEN_HERE"
+      },
+      "features": [
+        "messages",
+        "channels",
+        "notifications"
+      ]
+    },
+    {
+      "id": "gmail",
+      "name": "Gmail",
+      "enabled": true,
+      "transport": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@mcp-z/mcp-gmail"
+      ],
+      "environment": {
+        "GOOGLE_CLIENT_ID": "YOUR_GOOGLE_CLIENT_ID_HERE",
+        "GOOGLE_CLIENT_SECRET": "YOUR_GOOGLE_CLIENT_SECRET_HERE"
+      },
+      "features": [
+        "email_search",
+        "unread_messages",
+        "drafting"
+      ]
+    },
+    {
+      "id": "google-drive",
+      "name": "Google Drive",
+      "enabled": true,
+      "transport": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@mcp-z/mcp-drive"
+      ],
+      "environment": {
+        "GOOGLE_CLIENT_ID": "YOUR_GOOGLE_CLIENT_ID_HERE",
+        "GOOGLE_CLIENT_SECRET": "YOUR_GOOGLE_CLIENT_SECRET_HERE"
+      },
+      "features": [
+        "file_search",
+        "file_read",
+        "file_list",
+        "upload",
+        "download",
+        "folders"
+      ]
+    }
+  ]
+}

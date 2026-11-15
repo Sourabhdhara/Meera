@@ -101,12 +101,11 @@ export function getMcpConfigPath(): string {
     }
   }
 
-  // Check if project root or package template exists
+  // Check if authoritative default template exists in package/root
   const root = process.env.MEERA_APP_ROOT || process.cwd();
   const templateCandidates = [
     path.join(root, "config", "default-mcp-servers.json"),
-    path.join(root, "config", "mcp-servers.json"),
-    path.join(process.cwd(), "config", "mcp-servers.json")
+    path.join(process.cwd(), "config", "default-mcp-servers.json")
   ];
 
   for (const cand of templateCandidates) {

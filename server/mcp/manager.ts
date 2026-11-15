@@ -3,7 +3,7 @@ import fs from "fs";
 import { spawn, ChildProcessWithoutNullStreams } from "child_process";
 import crossSpawn from "cross-spawn";
 import readline from "readline";
-import { getMcpConfigPath, getMcpCachePath, getWhatsAppDir } from "../server_paths";
+import { getMcpConfigPath, getMcpCachePath, getWhatsAppDir, getMcpTokensDir } from "../server_paths";
 
 type ServerConfig = { id: string; name?: string; enabled?: boolean; transport: "stdio" | "http" | "sse"; command?: string; args?: string[]; workingDirectory?: string; environment?: Record<string, string>; url?: string };
 type Pending = { resolve: (v: any) => void; reject: (e: Error) => void };
@@ -88,11 +88,45 @@ export class McpManager {
     const command = process.platform === "win32" && config.command === "npx" ? "npx.cmd" : (config.command || "node");
     const isPackaged = Boolean(process.env.MEERA_LAUNCHED_BY === "electron" && process.execPath);
     const resolvedCommand = (command === "node" && isPackaged) ? process.execPath : command;
+
+    // Self-Healing OAuth Token Store & Credential Invalidation:
+    // If user changes their GOOGLE_CLIENT_ID or client credentials, automatically invalidate
+    // stale cached tokens to avoid invalid_grant or authentication deadlock.
+    const tokensDir = getMcpTokensDir();
+    const serverEnv = { ...(config.environment || {}) };
+
+    if (config.id === "gmail" || config.id === "google-drive") {
+      const tokenFileName = config.id === "gmail" ? "gmail-token-store" : "drive-token-store";
+      const tokenFilePath = path.join(tokensDir, tokenFileName);
+      const clientId = serverEnv.GOOGLE_CLIENT_ID || "";
+      const metaFilePath = path.join(tokensDir, `.${config.id}-client-meta.json`);
+
+      // If user replaced placeholder or changed client credentials, wipe old token
+      if (clientId && clientId !== "YOUR_GOOGLE_CLIENT_ID_HERE" && clientId !== "YOUR_GOOGLE_CLIENT_ID") {
+        let prevClientId = "";
+        try {
+          if (fs.existsSync(metaFilePath)) {
+            prevClientId = JSON.parse(fs.readFileSync(metaFilePath, "utf8")).client_id || "";
+          }
+        } catch {}
+
+        if (prevClientId && prevClientId !== clientId) {
+          console.log(`[MCP ${config.id}] Detected changed GOOGLE_CLIENT_ID. Purging stale auth token...`);
+          try { fs.rmSync(tokenFilePath, { force: true, recursive: true }); } catch {}
+        }
+        try { fs.writeFileSync(metaFilePath, JSON.stringify({ client_id: clientId, updated_at: new Date().toISOString() }, null, 2), "utf8"); } catch {}
+      }
+
+      // Authoritative token store URI pointing to protected AppData vault
+      const authoritativeUri = `file:///${tokenFilePath.replace(/\\/g, "/")}`;
+      serverEnv.TOKEN_STORE_URI = authoritativeUri;
+    }
+
     const env = Object.fromEntries(Object.entries({ 
       ...process.env, 
       MEERA_WHATSAPP_DIR: getWhatsAppDir(),
       ELECTRON_RUN_AS_NODE: (command === "node" && isPackaged) ? "1" : (process.env.ELECTRON_RUN_AS_NODE || "1"),
-      ...(config.environment || {}) 
+      ...serverEnv 
     }).filter(([, value]) => value != null).map(([key, value]) => [key, String(value)]));
     const child = crossSpawn(resolvedCommand, (config.args || []).map(String), {
       cwd: path.resolve(this.root, config.workingDirectory || "."),
