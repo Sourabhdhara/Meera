@@ -1186,7 +1186,7 @@ async function startServer() {
                   } catch (_) {}
                 }
 
-                const prompt = `[System Event - Jarvis Startup Briefing]: The user has just launched MEERA. Greet the user warmly in your natural companion voice. Check if you have unread messages on WhatsApp (via mcp_whatsapp_whatsapp_get_unread_messages) or new unread emails (via mcp_gmail_message_search with 'is:unread label:INBOX'). Brief them smoothly like Jarvis with any new incoming messages or updates, or simply ask how you can help if there are none. Remember: NEVER volunteer or announce the current time unless asked.`;
+                const prompt = `[System Event - Jarvis Startup Briefing]: The user has just launched MEERA. Greet the user warmly in your natural companion voice. Check if you have unread messages on WhatsApp (via mcp_whatsapp_whatsapp_get_unread_messages). Brief them smoothly like Jarvis with any new incoming messages or updates, or simply ask how you can help if there are none. Remember: NEVER volunteer or announce the current time unless asked.`;
 
                 console.log("[Proactive Initiative] Triggering warm Jarvis startup briefing...");
                 clientWs.send(JSON.stringify({
