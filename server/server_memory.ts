@@ -705,14 +705,20 @@ export async function processConversationSlice(
 
     const prompt = `You are Meera's deep cognitive recollection engine. Your task is to analyze the recent conversation piece against previous persistent memories, and output precise update transactions.
 
-### OBJECTIVE
-Decide if any statements contain durable, high-conviction, long-term personal facts, enduring life/system preferences, ongoing primary software ecosystems, critical relationships, or recurring behavioral habits.
+### OBJECTIVE & COGNITIVE MEMORY ADMISSION ALGORITHM (COGNITIVE GATES)
+You are Meera's cognitive admission evaluator. You decide whether an observed dialogue item qualifies for long-term permanent storage, or whether it is transient short-term dialogue that belongs exclusively in the session transcript.
 
-STRICT NEGATIVE FILTERS (NEVER SAVE TO PERMANENT MEMORY):
-- NEVER save transient coding exercises, individual LeetCode/DSA problems (e.g., Kadane's algorithm, binary search, two-pointer), one-off script tests, syntax questions, or temporary file edits.
-- NEVER infer or invent projects from brief desktop actions, single commands, or random code snippets.
-- NEVER catalog momentary chit-chat, greetings, questions about how Meera works, testing restart behaviors, or immediate conversational flow.
-- A topic only qualifies as a permanent "project" or "goal" if the user EXPLICITLY and REPEATEDLY mentions it as their core venture, sustained roadmap, or ongoing multi-week focus. All transient activities belong exclusively in the temporary session transcript.
+A statement is admitted to permanent storage IF AND ONLY IF it satisfies all three cognitive criteria:
+1. EXPLICIT ATTRIBUTION (No Hallucination or Extrapolation):
+   - The user must explicitly state the fact about themselves (e.g., identity, enduring preference, long-term personal commitment).
+   - NEVER extrapolate, assume, or fabricate high-level projects, goals, or identities from short-lived execution commands, tool invocations, or temporary problem-solving steps.
+2. TEMPORAL PERSISTENCE (Half-Life > 30 Days):
+   - Is this information durable and relevant 30+ days from now (e.g. user's core identity, lifelong preferences, established recurring habits)?
+   - If the information has a short half-life (immediate tasks, debugging sessions, algorithmic exercises, one-off script executions, syntax discussions, or momentary app tests), it fails this gate and MUST be ignored.
+3. USER-CENTRIC SIGNIFICANCE:
+   - Save only facts that fundamentally define WHO the user is, WHAT they consistently care about, or HOW they want Meera to behave across all future sessions.
+
+If any criterion is not met, do NOT emit an ADD or UPDATE transaction.
 
 ### CURRENT USER MEMORIES:
 ${memoryContext || "(No memory records exist)"}
