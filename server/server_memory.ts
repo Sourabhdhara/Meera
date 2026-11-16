@@ -508,15 +508,9 @@ function formatEpisodeRelativeTime(dateStr?: string, nowMs: number = Date.now())
 export function formatSystemInstructionsWithMemories(
   baseInstruction: string,
   memories: Memory[],
-  episodesOrLatest?: MemoryEpisode[] | MemoryEpisode | null,
   recentDialogueTurns: Array<{ role: "user" | "meera"; text: string; createdAt: string }> = []
 ): string {
-  const rawEpisodes = Array.isArray(episodesOrLatest)
-    ? episodesOrLatest
-    : (episodesOrLatest ? [episodesOrLatest] : []);
-  const recentEpisodes = rawEpisodes.slice(0, 3);
-
-  if (memories.length === 0 && recentEpisodes.length === 0) {
+  if (memories.length === 0 && (!recentDialogueTurns || recentDialogueTurns.length === 0)) {
     return (
       baseInstruction +
       "\n\n" +
@@ -599,69 +593,41 @@ export function formatSystemInstructionsWithMemories(
     }
   });
 
-  if (recentEpisodes.length > 0) {
-    const { timeLabel: latestTimeLabel, diffMins } = formatEpisodeRelativeTime(recentEpisodes[0].createdAt, nowMs);
-    const currentHour = new Date().getHours();
-    const isLateNight = currentHour >= 0 && currentHour < 5;
+  if (recentDialogueTurns && recentDialogueTurns.length > 0) {
+    const latestTurnTime = recentDialogueTurns[recentDialogueTurns.length - 1]?.createdAt;
+    const { timeLabel, diffMins } = formatEpisodeRelativeTime(latestTurnTime, nowMs);
 
     let situationContext = "";
     if (diffMins < 2) {
-      situationContext = "MICRO-RELOAD (< 2 mins ago): The user just refreshed the window or restarted the app. DO NOT restart conversation or say 'Welcome back!'. Treat it as the same continuous chat.";
+      situationContext = "CONTINUOUS CHAT (< 2 mins ago): You were speaking just a moment ago. Continue naturally as part of the exact same conversation.";
     } else if (diffMins < 30) {
-      situationContext = `QUICK RETURN (${latestTimeLabel}): The user took a brief break and is back. Greet briefly and pick up naturally where you left off.`;
-    } else if (isLateNight) {
-      situationContext = `LATE NIGHT CALL (Past Midnight, ${latestTimeLabel}): The user is up late. Note the late hour gently with caring anime warmth (e.g., 'Arre, itni der raat ko jag rahe ho? Neend nahi aayi kya?').`;
+      situationContext = `RETURNING AFTER SHORT BREAK (${timeLabel}): Pick up smoothly where you left off.`;
     } else if (diffMins < 12 * 60) {
-      situationContext = `SAME DAY RETURN (${latestTimeLabel}): Continue the daily thread smoothly.`;
+      situationContext = `SAME DAY RETURN (${timeLabel}): Reconnect warmly.`;
     } else {
-      situationContext = `RETURNING AFTER ABSENCE (${latestTimeLabel}): Reconnect warmly like a caring companion happy to see them again.`;
-    }
-
-    // Extract the most substantive open loop to follow up on
-    let primaryOpenLoop: string | null = null;
-    for (const ep of recentEpisodes) {
-      if (ep.keyTakeaways && ep.keyTakeaways.length > 0) {
-        const substantive = ep.keyTakeaways.find(t => t && t.trim().length > 6 && !t.toLowerCase().includes("test"));
-        if (substantive) {
-          primaryOpenLoop = substantive;
-          break;
-        }
-      }
+      situationContext = `RETURNING AFTER ABSENCE (${timeLabel}): Reconnect warmly like a caring companion happy to see them again.`;
     }
 
     memoryBlock +=
-      "\n=== RECENT RECAP ===\n" +
+      "\n=== LIVE CONVERSATION CONTEXT (VERBATIM HISTORIC TRANSCRIPT) ===\n" +
       `Current State: ${situationContext}\n\n` +
-      "LATEST PREVIOUS SESSION RECAP:\n";
+      "CRITICAL SOURCE OF TRUTH (VERBATIM DIALOGUE):\n" +
+      "Below are the EXACT word-to-word exchanges from the last session. You know and remember everything spoken here.\n" +
+      "- ALWAYS base your memory of 'what we were doing or talking about' STRICTLY on these actual spoken words.\n" +
+      "- NEVER invent, assume, or guess files, projects, or tasks that are NOT spoken in this transcript.\n" +
+      "- Do NOT repeat, re-answer, or recite past turns unprompted. Prioritize responding to the user's latest incoming speech.\n\n";
 
-    recentEpisodes.slice(0, 1).forEach((ep) => {
-      const { timeLabel } = formatEpisodeRelativeTime(ep.createdAt, nowMs);
-      memoryBlock += `[Previous Session] (${timeLabel}) "${ep.title}":\n`;
-      memoryBlock += `  * Summary: ${ep.summary}\n`;
-      if (ep.keyTakeaways && ep.keyTakeaways.length > 0) {
-        memoryBlock += `  * Key Takeaways: ${ep.keyTakeaways.join("; ")}\n`;
-      }
-    });
-
-    if (primaryOpenLoop) {
-      memoryBlock += `\nPRIMARY PENDING TOPIC / OPEN LOOP TO FOLLOW UP ON:\n  -> "${primaryOpenLoop}"\n`;
+    for (const t of recentDialogueTurns) {
+      const speaker = t.role === "user" ? "USER" : "MEERA";
+      memoryBlock += `[${speaker}]: "${t.text}"\n`;
     }
-
-    if (recentDialogueTurns && recentDialogueTurns.length > 0) {
-      memoryBlock += "\n=== LIVE CONTINUOUS CONVERSATION TRANSCRIPT (EXACT HISTORIC DIALOGUE) ===\n";
-      memoryBlock += "You know and remember the exact word-for-word exchanges between USER and MEERA:\n";
-      for (const t of recentDialogueTurns) {
-        const speaker = t.role === "user" ? "USER" : "MEERA";
-        memoryBlock += `[${speaker}]: "${t.text}"\n`;
-      }
-      memoryBlock += "=========================================================================\n";
-    }
+    memoryBlock += "=========================================================================\n";
 
     memoryBlock +=
       "\nCONVERSATIONAL CONTINUITY RULES (REAL & GENUINE HUMAN BEHAVIOR):\n" +
-      "1. DEFAULT TO LAST SESSION ONLY: Only bring up or continue the context of the immediately preceding session and the live transcript above. Do NOT volunteer or dump older sessions unless the user explicitly asks about them (e.g. 'humne parso kya baat ki thi?', 'do din pehle kya discuss hua tha?').\n" +
-      "2. DEEP HISTORIC RECALL ON-DEMAND: If the user explicitly asks about older sessions or past topics beyond the immediate last session, call 'recallMemory' to query your SQLite episodes and vector brain.\n" +
-      "3. TASK-FIRST PRIORITY: If the user's opening message is an urgent command, system instruction, or task, EXECUTE IT IMMEDIATELY without small-talk or greeting delay.\n" +
+      "1. GROUNDING IN TRANSCRIPT ONLY: If the user asks 'hum kya kar rahe the?', 'kya baat chal rahi thi?', or references past talk, answer STRICTLY using the exact transcript lines above. If something is not in the transcript, say honestly that you don't recall it.\n" +
+      "2. DEEP HISTORIC RECALL ON-DEMAND: If the user explicitly asks about older sessions beyond the immediate transcript, call 'recallMemory' to search deep SQLite vector brain.\n" +
+      "3. TASK-FIRST PRIORITY: If the user's opening message is an urgent command or task, EXECUTE IT IMMEDIATELY without small-talk delay.\n" +
       "4. HUMAN CONVERSATIONAL RHYTHM: Speak in short, warm, punchy 1-3 sentences per turn. Never speak like a corporate customer-support bot. Speak like a true, sweet anime-heroine friend.\n" +
       "======================================================\n";
   }
@@ -740,8 +706,13 @@ export async function processConversationSlice(
     const prompt = `You are Meera's deep cognitive recollection engine. Your task is to analyze the recent conversation piece against previous persistent memories, and output precise update transactions.
 
 ### OBJECTIVE
-Decide if any statements contain durable, important personal facts, enduring preferences, aspirations, ongoing projects, critical relationships, key historical emotional events, or behavioral trends.
-Avoid cataloging small talk, greetings, general chit-chat, or fleeting sentences (e.g., ignore 'hello', 'how are you', 'waking up', 'lol').
+Decide if any statements contain durable, high-conviction, long-term personal facts, enduring life/system preferences, ongoing primary software ecosystems, critical relationships, or recurring behavioral habits.
+
+STRICT NEGATIVE FILTERS (NEVER SAVE TO PERMANENT MEMORY):
+- NEVER save transient coding exercises, individual LeetCode/DSA problems (e.g., Kadane's algorithm, binary search, two-pointer), one-off script tests, syntax questions, or temporary file edits.
+- NEVER infer or invent projects from brief desktop actions, single commands, or random code snippets.
+- NEVER catalog momentary chit-chat, greetings, questions about how Meera works, testing restart behaviors, or immediate conversational flow.
+- A topic only qualifies as a permanent "project" or "goal" if the user EXPLICITLY and REPEATEDLY mentions it as their core venture, sustained roadmap, or ongoing multi-week focus. All transient activities belong exclusively in the temporary session transcript.
 
 ### CURRENT USER MEMORIES:
 ${memoryContext || "(No memory records exist)"}

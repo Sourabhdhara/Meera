@@ -708,16 +708,17 @@ async function startServer() {
           }
 
           const currentMemories = await loadMemories(apiKey);
-          const recentEpisodes = await dbGetRecentEpisodes(1);
-          const recentTurns = await dbGetRecentDialogueTurns(20);
-          const currentInstructions = formatSystemInstructionsWithMemories(finalSystemInstructions, currentMemories, recentEpisodes, recentTurns);
+          // On reconnection or resumption, do not inject recent turns into system instructions
+          // because the live session either already has session context or we inject it via clientContent.
+          const recentTurns = (isReconnect || resumptionHandle) ? [] : await dbGetRecentDialogueTurns(12);
+          const currentInstructions = formatSystemInstructionsWithMemories(finalSystemInstructions, currentMemories, recentTurns);
 
           const liveConfig: any = {
             responseModalities: [Modality.AUDIO],
             realtimeInputConfig: {
               automaticActivityDetection: {
                 prefixPaddingMs: 40,
-                silenceDurationMs: 420
+                silenceDurationMs: 250
               }
             },
             speechConfig: {
